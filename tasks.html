@@ -387,12 +387,13 @@
           .map(
             (s, i) => `
           <li class="${s.completed ? "done" : ""}">
+               <span>${s.text}</span>
             <input
               type="checkbox"
               ${s.completed ? "checked" : ""}
               onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
             />
-            <span>${s.text}</span>
+         
           </li>
         `
           )
