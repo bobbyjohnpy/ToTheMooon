@@ -97,6 +97,22 @@
         font-size: 12px;
         opacity: 0.7;
       }
+      .task.high {
+        border-left: 6px solid #dc2626;
+      }
+      .task.medium {
+        border-left: 6px solid #f59e0b;
+      }
+      .task.low {
+        border-left: 6px solid #16a34a;
+      }
+
+      .task {
+        padding: 12px;
+        margin: 10px 0;
+        background: #111;
+        border-radius: 8px;
+      }
     </style>
   </head>
 
@@ -111,6 +127,21 @@
 
     <main>
       <h1>Tasks</h1>
+      <section class="task-controls">
+        <input id="taskTitle" placeholder="Task name" />
+
+        <select id="urgency">
+          <option value="high">🔥 High urgency</option>
+          <option value="medium">⚠️ Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+
+        <textarea id="taskNotes" placeholder="Notes (optional)"></textarea>
+
+        <button onclick="startTask()">Start Task</button>
+      </section>
+
+      <ul id="taskList"></ul>
 
       <!-- ADD TASK -->
       <div class="card">
@@ -213,6 +244,53 @@
       window.deleteTask = async function (id) {
         await deleteDoc(doc(db, "users", uid, "tasks", id));
       };
+      let activeTask = null;
+
+      function startTask() {
+        const title = document.getElementById("taskTitle").value;
+        const urgency = document.getElementById("urgency").value;
+        const notes = document.getElementById("taskNotes").value;
+
+        if (!title) return alert("Task name required");
+
+        activeTask = {
+          title,
+          urgency,
+          notes,
+          startTime: Date.now(),
+        };
+
+        document.getElementById("taskTitle").value = "";
+        document.getElementById("taskNotes").value = "";
+      }
+
+      function stopTask() {
+        if (!activeTask) return;
+
+        const endTime = Date.now();
+
+        const task = {
+          ...activeTask,
+          endTime,
+          durationMs: endTime - activeTask.startTime,
+          createdAt: new Date(),
+        };
+
+        saveTask(task);
+        activeTask = null;
+      }
+
+      async function saveTask(task) {
+        try {
+          await addDoc(collection(db, "tasks"), task);
+        } catch (e) {
+          const local = JSON.parse(localStorage.getItem("tasks") || "[]");
+          local.push(task);
+          localStorage.setItem("tasks", JSON.stringify(local));
+        }
+
+        renderTasks();
+      }
     </script>
 
     <script>
