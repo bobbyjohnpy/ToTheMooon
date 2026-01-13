@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Founder OS</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
+
+    <!-- Basic styling (temporary) -->
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #0f172a;
+        color: white;
+      }
+
+      nav {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        background: #020617;
+      }
+
+      nav a {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation (top of body) -->
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="track.html">Track</a>
+      <a href="tasks.html">Tasks</a>
+      <a href="notes.html">Notes</a>
+      <a href="progress.html">Progress</a>
+    </nav>
+
+    <!-- Page-specific content -->
+    <main>
+      <h1>Tasks</h1>
+      <!-- Page UI goes here -->
+    </main>
+    <!-- Firebase + Firestore -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getFirestore,
+        enableIndexedDbPersistence,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "YOUR_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "XXXX",
+        appId: "XXXX",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      enableIndexedDbPersistence(db).catch(() => {
+        console.log("Offline persistence unavailable");
+      });
+
+      window.db = db;
+    </script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js");
+      }
+    </script>
+  </body>
+</html>
