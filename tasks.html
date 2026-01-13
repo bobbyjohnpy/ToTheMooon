@@ -171,7 +171,7 @@
         }
       });
 
-      async function addTask() {
+      window.addTask = async function addTask() {
         const title = document.getElementById("taskTitle").value;
         const urgency = document.getElementById("taskUrgency").value;
         if (!title) return;
@@ -183,7 +183,7 @@
         });
 
         document.getElementById("taskTitle").value = "";
-      }
+      };
 
       function loadTasks() {
         const q = query(
