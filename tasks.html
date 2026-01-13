@@ -3,38 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tasks – Founder OS</title>
 
-    <title>Founder OS</title>
-
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
 
-    <!-- Basic styling (temporary) -->
     <style>
       body {
         margin: 0;
         font-family: system-ui, sans-serif;
         background: #0f172a;
-        color: white;
+        color: #e5e7eb;
       }
 
       nav {
         display: flex;
-        gap: 12px;
+        justify-content: space-around;
         padding: 12px;
         background: #020617;
+        position: sticky;
+        top: 0;
       }
 
       nav a {
-        color: white;
+        color: #e5e7eb;
         text-decoration: none;
         font-size: 14px;
       }
+
+      main {
+        padding: 16px;
+      }
+
+      h1 {
+        margin-top: 0;
+      }
+
+      .card {
+        background: #020617;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        border-radius: 8px;
+        border: none;
+        font-size: 14px;
+      }
+
+      button {
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+      }
+
+      .task {
+        border-left: 6px solid gray;
+      }
+
+      .urgent-critical {
+        border-color: #dc2626;
+      }
+      .urgent-high {
+        border-color: #f97316;
+      }
+      .urgent-medium {
+        border-color: #eab308;
+      }
+      .urgent-low {
+        border-color: #22c55e;
+      }
+
+      .task-title {
+        font-weight: bold;
+      }
+
+      .note {
+        background: #020617;
+        padding: 8px;
+        border-radius: 8px;
+        margin-top: 6px;
+        font-size: 13px;
+      }
+
+      .small {
+        font-size: 12px;
+        opacity: 0.7;
+      }
     </style>
   </head>
+
   <body>
-    <!-- Navigation (top of body) -->
     <nav>
       <a href="index.html">Dashboard</a>
       <a href="track.html">Track</a>
@@ -43,37 +109,112 @@
       <a href="progress.html">Progress</a>
     </nav>
 
-    <!-- Page-specific content -->
     <main>
       <h1>Tasks</h1>
-      <!-- Page UI goes here -->
+
+      <!-- ADD TASK -->
+      <div class="card">
+        <h3>Add Task</h3>
+        <input id="taskTitle" placeholder="Task title" />
+        <select id="taskUrgency">
+          <option value="critical">🔴 Critical</option>
+          <option value="high">🟠 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <button onclick="addTask()">Add Task</button>
+      </div>
+
+      <!-- TASK LIST -->
+      <div id="taskList"></div>
     </main>
-    <!-- Firebase + Firestore -->
+
+    <!-- FIREBASE + AUTH + TASK LOGIC -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import {
         getFirestore,
-        enableIndexedDbPersistence,
+        collection,
+        addDoc,
+        onSnapshot,
+        query,
+        orderBy,
+        serverTimestamp,
+        doc,
+        deleteDoc,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import {
+        getAuth,
+        signInAnonymously,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
       const firebaseConfig = {
-        apiKey: "YOUR_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "XXXX",
-        appId: "XXXX",
+        apiKey: "AIzaSyDoFnzTnVlvebTeHly2tzkaV9tz-OxNvnw",
+        authDomain: "tothemoon100percent.firebaseapp.com",
+        projectId: "tothemoon100percent",
+        storageBucket: "tothemoon100percent.firebasestorage.app",
+        messagingSenderId: "1084909945870",
+        appId: "1:1084909945870:web:4c29fb6da7d251daf4e85f",
       };
 
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
+      const auth = getAuth(app);
 
-      enableIndexedDbPersistence(db).catch(() => {
-        console.log("Offline persistence unavailable");
+      signInAnonymously(auth);
+
+      let uid = null;
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          uid = user.uid;
+          loadTasks();
+        }
       });
 
-      window.db = db;
+      async function addTask() {
+        const title = document.getElementById("taskTitle").value;
+        const urgency = document.getElementById("taskUrgency").value;
+        if (!title) return;
+
+        await addDoc(collection(db, "users", uid, "tasks"), {
+          title,
+          urgency,
+          created: serverTimestamp(),
+        });
+
+        document.getElementById("taskTitle").value = "";
+      }
+
+      function loadTasks() {
+        const q = query(
+          collection(db, "users", uid, "tasks"),
+          orderBy("urgency"),
+          orderBy("created", "desc")
+        );
+
+        onSnapshot(q, (snap) => {
+          const list = document.getElementById("taskList");
+          list.innerHTML = "";
+
+          snap.forEach((docSnap) => {
+            const task = docSnap.data();
+            const el = document.createElement("div");
+            el.className = `card task urgent-${task.urgency}`;
+            el.innerHTML = `
+          <div class="task-title">${task.title}</div>
+          <div class="small">Urgency: ${task.urgency}</div>
+          <button onclick="deleteTask('${docSnap.id}')">Delete</button>
+        `;
+            list.appendChild(el);
+          });
+        });
+      }
+
+      window.deleteTask = async function (id) {
+        await deleteDoc(doc(db, "users", uid, "tasks", id));
+      };
     </script>
+
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js");
