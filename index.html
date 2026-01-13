@@ -10,31 +10,43 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
 
-    <!-- Basic styling (temporary) -->
     <style>
       body {
         margin: 0;
         font-family: system-ui, sans-serif;
         background: #0f172a;
-        color: white;
+        color: #e5e7eb;
       }
 
       nav {
         display: flex;
-        gap: 12px;
+        justify-content: space-around;
         padding: 12px;
         background: #020617;
+        position: sticky;
+        top: 0;
       }
 
       nav a {
-        color: white;
+        color: #e5e7eb;
         text-decoration: none;
         font-size: 14px;
       }
+
+      main {
+        padding: 20px;
+      }
+
+      .card {
+        background: #020617;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
     </style>
   </head>
+
   <body>
-    <!-- Navigation (top of body) -->
     <nav>
       <a href="index.html">Dashboard</a>
       <a href="track.html">Track</a>
@@ -43,37 +55,16 @@
       <a href="progress.html">Progress</a>
     </nav>
 
-    <!-- Page-specific content -->
     <main>
-      <h1>Tasks</h1>
-      <!-- Page UI goes here -->
+      <h1>Founder OS</h1>
+
+      <div class="card">
+        <h3>Welcome</h3>
+        <p>This is your founder dashboard. More coming next.</p>
+      </div>
     </main>
-    <!-- Firebase + Firestore -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-      import {
-        getFirestore,
-        enableIndexedDbPersistence,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "YOUR_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "XXXX",
-        appId: "XXXX",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-
-      enableIndexedDbPersistence(db).catch(() => {
-        console.log("Offline persistence unavailable");
-      });
-
-      window.db = db;
-    </script>
+    <!-- Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js");
