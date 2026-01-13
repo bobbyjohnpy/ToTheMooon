@@ -97,21 +97,34 @@
         font-size: 12px;
         opacity: 0.7;
       }
-      .task.high {
+      .task-card {
+        background: #111;
+        padding: 14px;
+        margin: 12px 0;
+        border-radius: 10px;
+      }
+
+      .task-card.high {
         border-left: 6px solid #dc2626;
       }
-      .task.medium {
+      .task-card.medium {
         border-left: 6px solid #f59e0b;
       }
-      .task.low {
+      .task-card.low {
         border-left: 6px solid #16a34a;
       }
 
-      .task {
-        padding: 12px;
-        margin: 10px 0;
-        background: #111;
-        border-radius: 8px;
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .task-status button {
+        background: #2563eb;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: white;
       }
     </style>
   </head>
@@ -127,40 +140,28 @@
 
     <main>
       <h1>Tasks</h1>
-      <section class="task-controls">
+
+      <!-- ADD TASK -->
+      <div class="add-task">
         <input id="taskTitle" placeholder="Task name" />
 
-        <select id="urgency">
-          <option value="high">🔥 High urgency</option>
+        <select id="taskUrgency">
+          <option value="high">🔥 High</option>
           <option value="medium">⚠️ Medium</option>
           <option value="low">🟢 Low</option>
         </select>
 
-        <textarea id="taskNotes" placeholder="Notes (optional)"></textarea>
+        <textarea
+          id="taskNote"
+          placeholder="Initial note (optional)"
+        ></textarea>
 
-        <button onclick="startTask()">Start Task</button>
-      </section>
-
-      <ul id="taskList"></ul>
-
-      <!-- ADD TASK -->
-      <div class="card">
-        <h3>Add Task</h3>
-        <input id="taskTitle" placeholder="Task title" />
-        <select id="taskUrgency">
-          <option value="critical">🔴 Critical</option>
-          <option value="high">🟠 High</option>
-          <option value="medium">🟡 Medium</option>
-          <option value="low">🟢 Low</option>
-        </select>
         <button onclick="addTask()">Add Task</button>
       </div>
 
       <!-- TASK LIST -->
       <div id="taskList"></div>
     </main>
-
-    <!-- FIREBASE + AUTH + TASK LOGIC -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import {
@@ -170,13 +171,15 @@
         onSnapshot,
         query,
         orderBy,
-        serverTimestamp,
         doc,
         deleteDoc,
+        updateDoc,
+        arrayUnion,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
       import {
         getAuth,
         signInAnonymously,
+        onAuthStateChanged,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
       const firebaseConfig = {
@@ -192,35 +195,46 @@
       const db = getFirestore(app);
       const auth = getAuth(app);
 
+      let uid = null;
+
       signInAnonymously(auth);
 
-      let uid = null;
-      auth.onAuthStateChanged((user) => {
+      onAuthStateChanged(auth, (user) => {
         if (user) {
           uid = user.uid;
           loadTasks();
         }
       });
 
-      window.addTask = async function addTask() {
-        const title = document.getElementById("taskTitle").value;
-        const urgency = document.getElementById("taskUrgency").value;
-        if (!title) return;
+      // ADD TASK
+      window.addTask = async function () {
+        const title = taskTitle.value.trim();
+        const urgency = taskUrgency.value;
+        const noteText = taskNote.value.trim();
 
-        await addDoc(collection(db, "users", uid, "tasks"), {
+        if (!title) return alert("Task needs a name");
+
+        const task = {
           title,
           urgency,
-          created: serverTimestamp(),
-        });
+          notes: noteText ? [{ text: noteText, date: Date.now() }] : [],
+          createdAt: Date.now(),
+          completed: false,
+          completedAt: null,
+        };
 
-        document.getElementById("taskTitle").value = "";
+        await addDoc(collection(db, "users", uid, "tasks"), task);
+
+        taskTitle.value = "";
+        taskNote.value = "";
       };
 
+      // LOAD + RENDER TASKS
       function loadTasks() {
         const q = query(
           collection(db, "users", uid, "tasks"),
-          orderBy("urgency"),
-          orderBy("created", "desc")
+          orderBy("completed"),
+          orderBy("createdAt", "desc")
         );
 
         onSnapshot(q, (snap) => {
@@ -229,68 +243,78 @@
 
           snap.forEach((docSnap) => {
             const task = docSnap.data();
-            const el = document.createElement("div");
-            el.className = `card task urgent-${task.urgency}`;
-            el.innerHTML = `
-          <div class="task-title">${task.title}</div>
-          <div class="small">Urgency: ${task.urgency}</div>
-          <button onclick="deleteTask('${docSnap.id}')">Delete</button>
-        `;
+            const el = renderTask(docSnap.id, task);
             list.appendChild(el);
           });
         });
       }
 
-      window.deleteTask = async function (id) {
-        await deleteDoc(doc(db, "users", uid, "tasks", id));
-      };
-      let activeTask = null;
+      // TASK CARD
+      function renderTask(id, task) {
+        const div = document.createElement("div");
+        div.className = `task-card ${task.urgency}`;
 
-      function startTask() {
-        const title = document.getElementById("taskTitle").value;
-        const urgency = document.getElementById("urgency").value;
-        const notes = document.getElementById("taskNotes").value;
+        div.innerHTML = `
+      <div class="task-header">
+        <h3>${task.title}</h3>
+        <small>${new Date(task.createdAt).toLocaleDateString()}</small>
+      </div>
 
-        if (!title) return alert("Task name required");
-
-        activeTask = {
-          title,
-          urgency,
-          notes,
-          startTime: Date.now(),
-        };
-
-        document.getElementById("taskTitle").value = "";
-        document.getElementById("taskNotes").value = "";
-      }
-
-      function stopTask() {
-        if (!activeTask) return;
-
-        const endTime = Date.now();
-
-        const task = {
-          ...activeTask,
-          endTime,
-          durationMs: endTime - activeTask.startTime,
-          createdAt: new Date(),
-        };
-
-        saveTask(task);
-        activeTask = null;
-      }
-
-      async function saveTask(task) {
-        try {
-          await addDoc(collection(db, "tasks"), task);
-        } catch (e) {
-          const local = JSON.parse(localStorage.getItem("tasks") || "[]");
-          local.push(task);
-          localStorage.setItem("tasks", JSON.stringify(local));
+      <div class="task-status">
+        ${
+          task.completed
+            ? `<span class="done">✅ Completed</span>`
+            : `<button onclick="completeTask('${id}')">Mark Complete</button>`
         }
+        <button onclick="deleteTask('${id}')">🗑</button>
+      </div>
 
-        renderTasks();
+      <div class="task-notes">
+        ${task.notes
+          .map(
+            (n) => `
+            <p>📝 ${n.text}<br>
+            <small>${new Date(n.date).toLocaleString()}</small></p>
+          `
+          )
+          .join("")}
+      </div>
+
+      <textarea
+        placeholder="Add note and press Enter"
+        onkeydown="addNote(event, '${id}')"
+      ></textarea>
+    `;
+
+        return div;
       }
+
+      // ADD NOTE
+      window.addNote = async function (e, taskId) {
+        if (e.key !== "Enter") return;
+
+        const text = e.target.value.trim();
+        if (!text) return;
+
+        e.target.value = "";
+
+        await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+          notes: arrayUnion({ text, date: Date.now() }),
+        });
+      };
+
+      // COMPLETE TASK
+      window.completeTask = async function (taskId) {
+        await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+          completed: true,
+          completedAt: Date.now(),
+        });
+      };
+
+      // DELETE TASK
+      window.deleteTask = async function (taskId) {
+        await deleteDoc(doc(db, "users", uid, "tasks", taskId));
+      };
     </script>
 
     <script>
