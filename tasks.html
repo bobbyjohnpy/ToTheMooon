@@ -97,34 +97,86 @@
         font-size: 12px;
         opacity: 0.7;
       }
+
       .task-card {
-        background: #111;
-        padding: 14px;
-        margin: 12px 0;
-        border-radius: 10px;
+        background: #0b1220;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.04);
       }
 
       .task-card.high {
-        border-left: 6px solid #dc2626;
+        border-left: 4px solid #ef4444;
       }
       .task-card.medium {
-        border-left: 6px solid #f59e0b;
+        border-left: 4px solid #f59e0b;
       }
       .task-card.low {
-        border-left: 6px solid #16a34a;
+        border-left: 4px solid #22c55e;
       }
 
-      .task-header {
-        display: flex;
-        justify-content: space-between;
+      .task-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        color: #e5e7eb;
+      }
+
+      .task-header small {
+        color: #64748b;
       }
 
       .task-status button {
         background: #2563eb;
         border: none;
-        padding: 6px 10px;
-        border-radius: 6px;
-        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+
+      .task-status .done {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      .subtasks h4 {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        margin: 12px 0 6px;
+      }
+
+      .subtasks ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .subtasks li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #cbd5f5;
+        margin-bottom: 4px;
+      }
+
+      .subtasks li.done span {
+        text-decoration: line-through;
+        color: #64748b;
+      }
+
+      .subtask-input {
+        margin-top: 6px;
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 6px 0;
+        color: #e5e7eb;
       }
     </style>
   </head>
@@ -284,6 +336,36 @@
         placeholder="Add note and press Enter"
         onkeydown="addNote(event, '${id}')"
       ></textarea>
+
+      <div class="subtasks">
+  <h4>Subtasks</h4>
+
+  <ul>
+    ${
+      task.subtasks
+        ?.map(
+          (s, i) => `
+      <li class="${s.completed ? "done" : ""}">
+        <input
+          type="checkbox"
+          ${s.completed ? "checked" : ""}
+          onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
+        />
+        <span>${s.text}</span>
+      </li>
+    `
+        )
+        .join("") || ""
+    }
+  </ul>
+
+  <input
+    class="subtask-input"
+    placeholder="Add subtask and press Enter"
+    onkeydown="addSubtask(event, '${id}')"
+  />
+</div>
+
     `;
 
         return div;
@@ -314,6 +396,32 @@
       // DELETE TASK
       window.deleteTask = async function (taskId) {
         await deleteDoc(doc(db, "users", uid, "tasks", taskId));
+      };
+
+      window.addSubtask = async function (e, taskId) {
+        if (e.key !== "Enter") return;
+
+        const text = e.target.value.trim();
+        if (!text) return;
+
+        e.target.value = "";
+
+        await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+          subtasks: arrayUnion({ text, completed: false }),
+        });
+      };
+
+      window.toggleSubtask = async function (taskId, index, current) {
+        const ref = doc(db, "users", uid, "tasks", taskId);
+
+        const snap = await getDoc(ref);
+        const task = snap.data();
+
+        task.subtasks[index].completed = !current;
+
+        await updateDoc(ref, {
+          subtasks: task.subtasks,
+        });
       };
     </script>
 
