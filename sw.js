@@ -1,6 +1,6 @@
 const CACHE_NAME = "founder-os-v1";
 const FILES_TO_CACHE = [
-  "/",
+  "./",
   "/index.html",
   "/track.html",
   "/tasks.html",
