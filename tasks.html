@@ -9,11 +9,29 @@
     <meta name="theme-color" content="#0f172a" />
 
     <style>
+      :root {
+        --bg-page: #0f172a;
+        --bg-card: #020617;
+        --bg-note: #020b1f;
+
+        --text-primary: #e5e7eb;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+
+        --border-subtle: rgba(255, 255, 255, 0.06);
+
+        --urgency-high: #ef4444;
+        --urgency-medium: #f59e0b;
+        --urgency-low: #22c55e;
+      }
+
+      /* ───────── Base Layout ───────── */
+
       body {
         margin: 0;
-        font-family: system-ui, sans-serif;
-        background: #0f172a;
-        color: #e5e7eb;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg-page);
+        color: var(--text-primary);
       }
 
       nav {
@@ -23,130 +41,142 @@
         background: #020617;
         position: sticky;
         top: 0;
+        z-index: 10;
       }
 
       nav a {
-        color: #e5e7eb;
+        color: var(--text-secondary);
         text-decoration: none;
         font-size: 14px;
       }
 
+      nav a:hover {
+        color: var(--text-primary);
+      }
+
       main {
         padding: 16px;
+        max-width: 720px;
+        margin: 0 auto;
       }
 
       h1 {
         margin-top: 0;
+        font-size: 20px;
+        font-weight: 600;
       }
 
-      .card {
-        background: #020617;
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 14px;
-      }
+      /* ───────── Inputs (Add Task Area) ───────── */
 
       input,
       select,
-      textarea,
-      button {
+      textarea {
         width: 100%;
         padding: 10px;
         margin-top: 6px;
         border-radius: 8px;
         border: none;
         font-size: 14px;
+        background: #020617;
+        color: var(--text-primary);
+      }
+
+      textarea {
+        resize: vertical;
       }
 
       button {
+        margin-top: 8px;
         background: #2563eb;
         color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
         cursor: pointer;
+        font-size: 14px;
       }
 
-      .task {
-        border-left: 6px solid gray;
+      /* ───────── Task Card ───────── */
+
+      .task-card {
+        background: var(--bg-card);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
 
-      .urgent-critical {
-        border-color: #dc2626;
+      /* Urgency accent (ONLY visual urgency) */
+      .task-card.high {
+        border-left: 3px solid var(--urgency-high);
       }
-      .urgent-high {
-        border-color: #f97316;
+      .task-card.medium {
+        border-left: 3px solid var(--urgency-medium);
       }
-      .urgent-medium {
-        border-color: #eab308;
+      .task-card.low {
+        border-left: 3px solid var(--urgency-low);
       }
-      .urgent-low {
-        border-color: #22c55e;
+
+      /* ───────── Task Header ───────── */
+
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
       .task-title {
-        font-weight: bold;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .urgency-badge {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+        text-transform: capitalize;
+      }
+
+      /* ───────── Meta ───────── */
+
+      .task-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      /* ───────── Notes ───────── */
+
+      .task-notes {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
 
       .note {
-        background: #020617;
-        padding: 8px;
-        border-radius: 8px;
-        margin-top: 6px;
-        font-size: 13px;
-      }
-
-      .small {
+        background: var(--bg-note);
+        padding: 6px 8px;
+        border-radius: 6px;
         font-size: 12px;
-        opacity: 0.7;
+        color: var(--text-primary);
       }
 
-      .task-card {
-        background: #0b1220;
-        border-radius: 14px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.04);
+      .note small {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        color: var(--text-muted);
       }
 
-      .task-card.high {
-        border-left: 4px solid #ef4444;
-      }
-      .task-card.medium {
-        border-left: 4px solid #f59e0b;
-      }
-      .task-card.low {
-        border-left: 4px solid #22c55e;
-      }
+      /* ───────── Subtasks ───────── */
 
-      .task-header h3 {
-        font-size: 1rem;
-        font-weight: 600;
-        margin: 0;
-        color: #e5e7eb;
-      }
-
-      .task-header small {
-        color: #64748b;
-      }
-
-      .task-status button {
-        background: #2563eb;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        cursor: pointer;
-      }
-
-      .task-status .done {
-        color: #22c55e;
-        font-weight: 600;
-      }
-      .subtasks h4 {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #64748b;
-        margin: 12px 0 6px;
+      .subtasks {
+        margin-top: 4px;
       }
 
       .subtasks ul {
@@ -159,24 +189,40 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 0.85rem;
-        color: #cbd5f5;
-        margin-bottom: 4px;
+        font-size: 12px;
+        color: var(--text-primary);
       }
 
       .subtasks li.done span {
         text-decoration: line-through;
-        color: #64748b;
+        color: var(--text-muted);
       }
 
       .subtask-input {
-        margin-top: 6px;
-        width: 100%;
+        margin-top: 4px;
         background: transparent;
         border: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 6px 0;
-        color: #e5e7eb;
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 4px 0;
+        font-size: 12px;
+        color: var(--text-primary);
+      }
+
+      /* ───────── Actions (INLINE, NOT BUTTONS) ───────── */
+
+      .task-actions {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+      }
+
+      .task-actions span {
+        cursor: pointer;
+        color: var(--text-secondary);
+      }
+
+      .task-actions span:hover {
+        color: var(--text-primary);
       }
     </style>
   </head>
@@ -224,6 +270,7 @@
         query,
         orderBy,
         doc,
+        getDoc,
         deleteDoc,
         updateDoc,
         arrayUnion,
@@ -307,66 +354,67 @@
         div.className = `task-card ${task.urgency}`;
 
         div.innerHTML = `
-      <div class="task-header">
-        <h3>${task.title}</h3>
-        <small>${new Date(task.createdAt).toLocaleDateString()}</small>
-      </div>
+    <div class="task-header">
+      <div class="task-title">${task.title}</div>
+      <div class="urgency-badge">${task.urgency}</div>
+    </div>
 
-      <div class="task-status">
-        ${
-          task.completed
-            ? `<span class="done">✅ Completed</span>`
-            : `<button onclick="completeTask('${id}')">Mark Complete</button>`
-        }
-        <button onclick="deleteTask('${id}')">🗑</button>
-      </div>
+    <div class="task-meta">
+      Created ${new Date(task.createdAt).toLocaleDateString()}
+    </div>
 
-      <div class="task-notes">
-        ${task.notes
+    <div class="task-notes">
+      ${task.notes
+        .map(
+          (n) => `
+        <div class="note">
+          ${n.text}
+          <small>${new Date(n.date).toLocaleString()}</small>
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+
+    <textarea
+      placeholder="Add note and press Enter"
+      onkeydown="addNote(event, '${id}')"
+    ></textarea>
+
+    <div class="subtasks">
+      <ul>
+        ${(task.subtasks || [])
           .map(
-            (n) => `
-            <p>📝 ${n.text}<br>
-            <small>${new Date(n.date).toLocaleString()}</small></p>
-          `
+            (s, i) => `
+          <li class="${s.completed ? "done" : ""}">
+            <input
+              type="checkbox"
+              ${s.completed ? "checked" : ""}
+              onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
+            />
+            <span>${s.text}</span>
+          </li>
+        `
           )
           .join("")}
-      </div>
+      </ul>
 
-      <textarea
-        placeholder="Add note and press Enter"
-        onkeydown="addNote(event, '${id}')"
-      ></textarea>
+      <input
+        class="subtask-input"
+        placeholder="Add subtask and press Enter"
+        onkeydown="addSubtask(event, '${id}')"
+      />
+    </div>
 
-      <div class="subtasks">
-  <h4>Subtasks</h4>
-
-  <ul>
-    ${
-      task.subtasks
-        ?.map(
-          (s, i) => `
-      <li class="${s.completed ? "done" : ""}">
-        <input
-          type="checkbox"
-          ${s.completed ? "checked" : ""}
-          onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
-        />
-        <span>${s.text}</span>
-      </li>
-    `
-        )
-        .join("") || ""
-    }
-  </ul>
-
-  <input
-    class="subtask-input"
-    placeholder="Add subtask and press Enter"
-    onkeydown="addSubtask(event, '${id}')"
-  />
-</div>
-
-    `;
+    <div class="task-actions">
+      ${
+        task.completed
+          ? `<span style="color: var(--urgency-low)">Completed</span>`
+          : `<span onclick="completeTask('${id}')">Complete</span>`
+      }
+      <span onclick="deleteTask('${id}')">Delete</span>
+    </div>
+  `;
 
         return div;
       }
