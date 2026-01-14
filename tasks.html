@@ -448,8 +448,8 @@ window.handleAuth = async function () {
 
 
 window.linkAccount = async function () {
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
 
   if (!email || !password) {
     alert("Enter email and password");
@@ -465,8 +465,8 @@ window.linkAccount = async function () {
   }
 };
 window.signIn = async function () {
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
 
   if (!email || !password) {
     alert("Enter email and password");
