@@ -30,6 +30,11 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // 🚫 Never touch non-GET requests (POST, PUT, etc.)
+  if (event.request.method !== "GET") {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
