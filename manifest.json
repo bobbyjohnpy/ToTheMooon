@@ -1,7 +1,8 @@
 {
   "name": "ToTheMooon",
   "short_name": "ToTheMooon",
-  "start_url": "ToTheMooon/index.html",
+  "start_url": "/ToTheMooon/index.html",
+  "scope": "/ToTheMooon/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
