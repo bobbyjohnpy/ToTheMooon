@@ -311,6 +311,8 @@
     <main>
 
   <!-- AUTH BOX -->
+
+   
   <div id="authBox" style="display:none; margin-bottom:12px;">
     <input id="authEmail" type="email" placeholder="Email" />
     <input id="authPassword" type="password" placeholder="Password" />
@@ -321,6 +323,20 @@
 
     <main>
       <h1>Tasks</h1>
+      <div id="authPanel" style="display:none; margin-bottom:16px;">
+  <div class="card">
+    <small class="small">Account</small>
+
+    <input id="authEmail" type="email" placeholder="Email" />
+    <input id="authPassword" type="password" placeholder="Password" />
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <span onclick="linkAccount()" style="cursor:pointer;">Create Account</span>
+      <span onclick="signIn()" style="cursor:pointer;">Sign In</span>
+    </div>
+  </div>
+</div>
+
 
       <!-- ADD TASK -->
       <div class="add-task">
@@ -388,19 +404,19 @@
 
       signInAnonymously(auth);
 
-    onAuthStateChanged(auth, (user) => {
-  if (!user) return;
+  onAuthStateChanged(auth, (user) => {
+  if (user) {
+    uid = user.uid;
+    loadTasks();
 
-  uid = user.uid;
-
-  if (user.isAnonymous) {
-    document.getElementById("authBox").style.display = "block";
-  } else {
-    document.getElementById("authBox").style.display = "none";
+    if (user.isAnonymous) {
+      document.getElementById("authPanel").style.display = "block";
+    } else {
+      document.getElementById("authPanel").style.display = "none";
+    }
   }
-
-  loadTasks(); // or loadNotes / loadProgress depending on page
 });
+
 
 window.handleAuth = async function () {
   const email = authEmail.value.trim();
@@ -428,6 +444,42 @@ window.handleAuth = async function () {
     }
   }
 };
+
+
+
+window.linkAccount = async function () {
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  if (!email || !password) {
+    alert("Enter email and password");
+    return;
+  }
+
+  try {
+    const credential = EmailAuthProvider.credential(email, password);
+    await linkWithCredential(auth.currentUser, credential);
+    alert("Account created. Your data is now synced.");
+  } catch (err) {
+    alert(err.message);
+  }
+};
+window.signIn = async function () {
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  if (!email || !password) {
+    alert("Enter email and password");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
 
 
       // ADD TASK
