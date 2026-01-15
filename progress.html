@@ -43,6 +43,88 @@
         border-radius: 12px;
         margin-bottom: 16px;
       }
+      .page-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+      main {
+        width: 80%;
+        padding: 16px;
+        max-width: 720px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      /* ───────── Inputs (Add Task Area) ───────── */
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 0px;
+        margin-top: 6px;
+        border-radius: 8px;
+        border: none;
+        font-size: 14px;
+        background: #020617;
+        color: var(--text-primary);
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      button {
+        margin-top: 8px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      #authPanel {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      @media (max-width: 600px) {
+        main {
+          padding: 12px;
+          width: 85%;
+          margin: 0;
+        }
+
+        h1 {
+          font-size: 18px;
+        }
+
+        /* Inputs feel lighter */
+        input,
+        select,
+        textarea {
+          padding: 10px 0px;
+          font-size: 13px;
+        }
+
+        textarea {
+          min-height: 48px;
+        }
+
+        /* Nav readability */
+        nav a {
+          font-size: 13px;
+        }
+      }
     </style>
   </head>
   <script>
