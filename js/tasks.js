@@ -172,12 +172,12 @@ export function renderTask(id, task) {
         .join("") || ""
     }
   </ul>
+<input
+  class="subtask-input"
+  placeholder="Add subtask and press Enter"
+  data-task-id="${id}"
+/>
 
-  <input
-    class="subtask-input"
-    placeholder="Add subtask and press Enter"
-    onkeydown="addSubtask(event, '${id}')"
-  />
 </div>
   `;
 
@@ -198,6 +198,12 @@ export function renderTask(id, task) {
 
   const deleteBtn = div.querySelector(".delete-task");
   deleteBtn.addEventListener("click", () => deleteTask(id));
+
+  const input = div.querySelector(".subtask-input");
+
+  input.addEventListener("keydown", (e) => {
+    addSubtask(e, id);
+  });
 
   return div;
 }
