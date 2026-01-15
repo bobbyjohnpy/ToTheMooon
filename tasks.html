@@ -318,16 +318,6 @@
   </head>
 
   <body>
-    <nav>
-      <a href="index.html">Dashboard</a>
-      <a href="track.html">Track</a>
-      <a href="tasks.html">Tasks</a>
-      <a href="notes.html">Notes</a>
-      <a href="progress.html">Progress</a>
-      <button id="logoutBtn" onclick="logout()" style="display: none">
-        Log out
-      </button>
-    </nav>
     <div class="page-wrapper">
       <!-- AUTH BOX -->
 
@@ -380,7 +370,11 @@
         <div id="taskList"></div>
       </main>
     </div>
+
     <script type="module">
+      import { injectNav } from "./js/nav.js";
+      injectNav("tasks");
+
       import {
         collection,
         addDoc,
@@ -440,39 +434,6 @@
       }
 
       // ───────── AUTH UI ─────────
-
-      window.linkAccount = async function () {
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
-
-        if (!email || !password) {
-          alert("Enter email and password");
-          return;
-        }
-
-        try {
-          await upgradeAnonymousAccount(email, password);
-          alert("Account created. Your data is now synced.");
-        } catch (err) {
-          alert(err.message);
-        }
-      };
-
-      window.signIn = async function () {
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
-
-        if (!email || !password) {
-          alert("Enter email and password");
-          return;
-        }
-
-        try {
-          await signIn(email, password);
-        } catch (err) {
-          alert(err.message);
-        }
-      };
 
       // ───────── TASKS ─────────
 
@@ -565,7 +526,7 @@
         await deleteDoc(doc(db, "users", uid, "tasks", taskId));
       };
     </script>
-
+    <script type="module" src="./js/auth-ui.js"></script>
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js");
