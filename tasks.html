@@ -379,7 +379,12 @@
       import { logout } from "./js/auth.js";
       window.logout = logout;
 
-      import { loadTasks, addTask } from "./js/tasks.js";
+      import {
+        loadTasks,
+        addTask,
+        addSubtask,
+        toggleSubtask,
+      } from "./js/tasks.js";
 
       // Auth + load tasks
       initAuthGate(loadTasks);
