@@ -182,6 +182,23 @@
         // For pages without page-specific content, do nothing
         // For tasks.html, we call loadTasks(uid)
       });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").then(() => {
+            console.log("Service Worker registered successfully");
+          });
+        });
+      }
+
+      // Optional: Detect beforeinstallprompt to trigger install UI
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log("PWA install prompt available");
+        // You can later trigger with: deferredPrompt.prompt();
+      });
     </script>
     <!-- Service Worker -->
     <script>
