@@ -84,6 +84,31 @@ export async function deleteTask(taskId) {
   await deleteDoc(doc(db, "users", uid, "tasks", taskId));
 }
 
+export async function addSubtask(e, taskId) {
+  if (e.key !== "Enter") return;
+
+  const text = e.target.value.trim();
+  if (!text) return;
+
+  e.target.value = "";
+
+  await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+    subtasks: arrayUnion({ text, completed: false }),
+  });
+}
+
+export async function toggleSubtask(taskId, index, current) {
+  const ref = doc(db, "users", uid, "tasks", taskId);
+
+  const snap = await getDoc(ref);
+  const task = snap.data();
+
+  task.subtasks[index].completed = !current;
+
+  await updateDoc(ref, {
+    subtasks: task.subtasks,
+  });
+}
 // ---------------------
 // Render Task
 // ---------------------
@@ -125,6 +150,35 @@ export function renderTask(id, task) {
       }
       <span class="delete-task">Delete</span>
     </div>
+
+      <div class="subtasks">
+  <h4>Subtasks</h4>
+
+  <ul>
+    ${
+      task.subtasks
+        ?.map(
+          (s, i) => `
+      <li class="${s.completed ? "done" : ""}">
+        <input
+          type="checkbox"
+          ${s.completed ? "checked" : ""}
+          onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
+        />
+        <span>${s.text}</span>
+      </li>
+    `
+        )
+        .join("") || ""
+    }
+  </ul>
+
+  <input
+    class="subtask-input"
+    placeholder="Add subtask and press Enter"
+    onkeydown="addSubtask(event, '${id}')"
+  />
+</div>
   `;
 
   // ---------------------
