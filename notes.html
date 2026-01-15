@@ -10,132 +10,87 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
 
-    <!-- Basic styling (temporary) -->
     <style>
       body {
         margin: 0;
         font-family: system-ui, sans-serif;
         background: #0f172a;
-        color: white;
+        color: #e5e7eb;
       }
 
       nav {
         display: flex;
-        gap: 12px;
+        justify-content: space-around;
         padding: 12px;
         background: #020617;
+        position: sticky;
+        top: 0;
       }
 
       nav a {
-        color: white;
+        color: #e5e7eb;
         text-decoration: none;
         font-size: 14px;
       }
+
+      main {
+        padding: 20px;
+      }
+
+      .card {
+        background: #020617;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
     </style>
   </head>
+  <script>
+    function handleAuth() {
+      alert("Auth not wired yet");
+    }
+  </script>
+
   <body>
-    <!-- Navigation (top of body) -->
-    <nav>
-      <a href="index.html">Dashboard</a>
-      <a href="track.html">Track</a>
-      <a href="tasks.html">Tasks</a>
-      <a href="notes.html">Notes</a>
-      <a href="progress.html">Progress</a>
-    </nav>
-    <main>
-      <!-- AUTH BOX -->
-      <div id="authBox" style="display: none; margin-bottom: 12px">
-        <input id="authEmail" type="email" placeholder="Email" />
-        <input id="authPassword" type="password" placeholder="Password" />
-        <button onclick="handleAuth()">Sign in / Create account</button>
-      </div>
+    <div id="app">
+      <main>
+        <!-- rest of page content -->
 
-      <!-- rest of page content -->
+        <h1>Founder OS</h1>
+        <div id="authPanel" style="display: none; margin-bottom: 16px">
+          <div class="card">
+            <small class="small">Account</small>
+            <input id="authEmail" type="email" placeholder="Email" />
+            <input id="authPassword" type="password" placeholder="Password" />
 
-      <!-- Page-specific content -->
+            <div style="display: flex; gap: 12px; margin-top: 8px">
+              <span onclick="linkAccount()" style="cursor: pointer"
+                >Create Account</span
+              >
+              <span onclick="signIn()" style="cursor: pointer">Sign In</span>
+            </div>
+          </div>
+        </div>
 
-      <h1>Notes</h1>
-      <!-- Page UI goes here -->
-    </main>
-    <!-- Firebase + Firestore -->
+        <div class="card">
+          <h3>Welcome</h3>
+          <p>This is your founder dashboard. More coming next.</p>
+        </div>
+      </main>
+    </div>
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-      import {
-        getFirestore,
-        enableIndexedDbPersistence,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-        EmailAuthProvider,
-        linkWithCredential,
-        signInWithEmailAndPassword,
-        signInAnonymously,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { initAuthGate } from "./js/auth-gate.js";
+      import { logout } from "./js/auth.js";
+      window.logout = logout;
 
-      const firebaseConfig = {
-        apiKey: "YOUR_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "XXXX",
-        appId: "XXXX",
-      };
+      import "./js/auth-ui.js"; // bring in linkAccount/signIn globally
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      const auth = getAuth(app);
-
-      enableIndexedDbPersistence(db).catch(() => {
-        console.log("Offline persistence unavailable");
+      initAuthGate((uid) => {
+        // For pages without page-specific content, do nothing
+        // For tasks.html, we call loadTasks(uid)
       });
-
-      // Anonymous sign-in
-      signInAnonymously(auth).catch(console.error);
-
-      onAuthStateChanged(auth, (user) => {
-        if (!user) return;
-
-        if (user.isAnonymous) {
-          authBox.style.display = "block";
-        } else {
-          authBox.style.display = "none";
-        }
-
-        // loadNotes(); // stub for now
-      });
-
-      window.handleAuth = async function () {
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
-
-        if (!email || !password) {
-          alert("Enter email and password");
-          return;
-        }
-
-        try {
-          const credential = EmailAuthProvider.credential(email, password);
-
-          if (auth.currentUser.isAnonymous) {
-            await linkWithCredential(auth.currentUser, credential);
-            alert("Account linked successfully.");
-          } else {
-            await signInWithEmailAndPassword(auth, email, password);
-          }
-        } catch (err) {
-          if (err.code === "auth/email-already-in-use") {
-            await signInWithEmailAndPassword(auth, email, password);
-          } else {
-            alert(err.message);
-          }
-        }
-      };
-
-      window.db = db;
-      window.auth = auth;
     </script>
-
+    <!-- Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js");

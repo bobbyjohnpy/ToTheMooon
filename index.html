@@ -53,24 +53,24 @@
 
   <body>
     <div id="app">
-      <nav>
-        <a href="index.html">Dashboard</a>
-        <a href="track.html">Track</a>
-        <a href="tasks.html">Tasks</a>
-        <a href="notes.html">Notes</a>
-        <a href="progress.html">Progress</a>
-      </nav>
       <main>
-        <!-- AUTH BOX -->
-        <div id="authBox" style="display: none; margin-bottom: 12px">
-          <input id="authEmail" type="email" placeholder="Email" />
-          <input id="authPassword" type="password" placeholder="Password" />
-          <button onclick="handleAuth()">Sign in / Create account</button>
-        </div>
-
         <!-- rest of page content -->
 
         <h1>Founder OS</h1>
+        <div id="authPanel" style="display: none; margin-bottom: 16px">
+          <div class="card">
+            <small class="small">Account</small>
+            <input id="authEmail" type="email" placeholder="Email" />
+            <input id="authPassword" type="password" placeholder="Password" />
+
+            <div style="display: flex; gap: 12px; margin-top: 8px">
+              <span onclick="linkAccount()" style="cursor: pointer"
+                >Create Account</span
+              >
+              <span onclick="signIn()" style="cursor: pointer">Sign In</span>
+            </div>
+          </div>
+        </div>
 
         <div class="card">
           <h3>Welcome</h3>
@@ -78,7 +78,18 @@
         </div>
       </main>
     </div>
+    <script type="module">
+      import { initAuthGate } from "./js/auth-gate.js";
+      import { logout } from "./js/auth.js";
+      window.logout = logout;
 
+      import "./js/auth-ui.js"; // bring in linkAccount/signIn globally
+
+      initAuthGate((uid) => {
+        // For pages without page-specific content, do nothing
+        // For tasks.html, we call loadTasks(uid)
+      });
+    </script>
     <!-- Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
