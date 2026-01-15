@@ -396,19 +396,12 @@
         upgradeAnonymousAccount,
       } from "./js/auth.js";
 
-      let uid = null;
+      import { initAuthGate } from "./js/auth-gate.js";
 
-      // ✅ AUTH GATE (single entry point)
-      let unsubscribeTasks = null;
-
-      initAuth((user) => {
-        const uid = user.uid;
-
-        // 🔥 detach old listener
-        if (unsubscribeTasks) unsubscribeTasks();
-
-        unsubscribeTasks = loadTasks(uid);
+      initAuthGate((uid) => {
+        return loadTasks(uid);
       });
+
       import { logout } from "./js/auth.js";
       window.logout = logout;
 
