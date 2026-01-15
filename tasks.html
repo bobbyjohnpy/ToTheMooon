@@ -352,10 +352,10 @@
         <div class="add-task">
           <input id="taskTitle" placeholder="Task name" />
 
-          <select id="taskStatus">
-            <option value="todo">📝 To Do</option>
-            <option value="in-progress">⏳ In Progress</option>
-            <option value="done">✅ Done</option>
+          <select id="taskUrgency">
+            <option value="high">🔥 High</option>
+            <option value="medium">⚠️ Medium</option>
+            <option value="low">🟢 Low</option>
           </select>
 
           <textarea
@@ -372,56 +372,31 @@
     </div>
 
     <script type="module">
-      import { injectNav, updateProjectSwitcher } from "./js/nav.js";
+      import { injectNav } from "./js/nav.js";
       injectNav("tasks");
 
       import { initAuthGate } from "./js/auth-gate.js";
       import { logout } from "./js/auth.js";
       window.logout = logout;
 
-      import {
-        initProjectContext,
-        getActiveProjectId,
-        onProjectChange,
-      } from "./js/project-context.js";
-      import { loadProjects } from "./js/projects.js";
-      import { loadTasks, addTask } from "./js/tasks.js";
-
       // Auth + load tasks
-      initAuthGate((userId) => {
-        // Initialize project context and load projects
-        loadProjects(userId, (projects) => {
-          // Set active project if not set
-          if (!getActiveProjectId() && projects.length > 0) {
-            initProjectContext(projects[0].id);
-          } else {
-            initProjectContext(getActiveProjectId());
-          }
+      initAuthGate(loadTasks);
 
-          // Update project switcher
-          updateProjectSwitcher(projects);
-
-          // Load tasks for active project
-          const unsubscribeTasks = loadTasks(userId, getActiveProjectId());
-
-          // Re-load tasks when project changes
-          onProjectChange((projectId) => {
-            if (unsubscribeTasks) unsubscribeTasks();
-            loadTasks(userId, projectId);
-          });
-
-          return unsubscribeTasks;
-        });
-      });
+      import {
+        loadTasks,
+        addTask,
+        addSubtask,
+        toggleSubtask,
+      } from "./js/tasks.js";
 
       // Add task button
       document
         .querySelector(".addtask-button")
         .addEventListener("click", () => {
           const title = taskTitle.value.trim();
-          const status = "todo";
+          const urgency = taskUrgency.value;
           const noteText = taskNote.value.trim();
-          addTask(title, status, noteText);
+          addTask(title, urgency, noteText);
           taskTitle.value = "";
           taskNote.value = "";
         });
