@@ -2,7 +2,6 @@ const CACHE_NAME = "founder-os-v3";
 const BASE_PATH = "/ToTheMooon/";
 
 const FILES_TO_CACHE = [
-  BASE_PATH,
   BASE_PATH + "index.html",
   BASE_PATH + "track.html",
   BASE_PATH + "tasks.html",
@@ -30,10 +29,10 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // 🚫 Never touch non-GET requests (POST, PUT, etc.)
-  if (event.request.method !== "GET") {
-    return;
-  }
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  if (url.origin !== location.origin) return;
 
   event.respondWith(
     fetch(event.request)
@@ -47,3 +46,4 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+

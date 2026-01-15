@@ -45,34 +45,39 @@
       }
     </style>
   </head>
+  <script>
+    function handleAuth() {
+      alert("Auth not wired yet");
+    }
+  </script>
 
   <body>
-    <nav>
-      <a href="index.html">Dashboard</a>
-      <a href="track.html">Track</a>
-      <a href="tasks.html">Tasks</a>
-      <a href="notes.html">Notes</a>
-      <a href="progress.html">Progress</a>
-    </nav>
-    <main>
+    <div id="app">
+      <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="track.html">Track</a>
+        <a href="tasks.html">Tasks</a>
+        <a href="notes.html">Notes</a>
+        <a href="progress.html">Progress</a>
+      </nav>
+      <main>
+        <!-- AUTH BOX -->
+        <div id="authBox" style="display: none; margin-bottom: 12px">
+          <input id="authEmail" type="email" placeholder="Email" />
+          <input id="authPassword" type="password" placeholder="Password" />
+          <button onclick="handleAuth()">Sign in / Create account</button>
+        </div>
 
-  <!-- AUTH BOX -->
-  <div id="authBox" style="display:none; margin-bottom:12px;">
-    <input id="authEmail" type="email" placeholder="Email" />
-    <input id="authPassword" type="password" placeholder="Password" />
-    <button onclick="handleAuth()">Sign in / Create account</button>
-  </div>
+        <!-- rest of page content -->
 
-  <!-- rest of page content -->
+        <h1>Founder OS</h1>
 
-    <main>
-      <h1>Founder OS</h1>
-
-      <div class="card">
-        <h3>Welcome</h3>
-        <p>This is your founder dashboard. More coming next.</p>
-      </div>
-    </main>
+        <div class="card">
+          <h3>Welcome</h3>
+          <p>This is your founder dashboard. More coming next.</p>
+        </div>
+      </main>
+    </div>
 
     <!-- Service Worker -->
     <script>

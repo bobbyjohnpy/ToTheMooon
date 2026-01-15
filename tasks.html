@@ -378,9 +378,7 @@
       </main>
     </div>
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import {
-        getFirestore,
         collection,
         addDoc,
         onSnapshot,
@@ -392,50 +390,32 @@
         updateDoc,
         arrayUnion,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-      import {
-        getAuth,
-        signInAnonymously,
-        onAuthStateChanged,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      import {
-        EmailAuthProvider,
-        linkWithCredential,
-        signInWithEmailAndPassword,
-        createUserWithEmailAndPassword,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyDoFnzTnVlvebTeHly2tzkaV9tz-OxNvnw",
-        authDomain: "tothemoon100percent.firebaseapp.com",
-        projectId: "tothemoon100percent",
-        storageBucket: "tothemoon100percent.firebasestorage.app",
-        messagingSenderId: "1084909945870",
-        appId: "1:1084909945870:web:4c29fb6da7d251daf4e85f",
-      };
+      import { db } from "./js/firebase.js";
+      import {
+        initAuth,
+        onUserReady,
+        signIn,
+        upgradeAnonymousAccount,
+      } from "./js/auth.js";
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      const auth = getAuth(app);
-      window._auth = auth;
+      initAuth();
 
       let uid = null;
 
-      signInAnonymously(auth);
+      onUserReady((user) => {
+        uid = user.uid;
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          uid = user.uid;
-          loadTasks();
+        document.getElementById("authPanel").style.display = user.isAnonymous
+          ? "flex"
+          : "none";
 
-          if (user.isAnonymous) {
-            document.getElementById("authPanel").style.display = "flex";
-          } else {
-            document.getElementById("authPanel").style.display = "none";
-          }
-        }
+        loadTasks();
       });
 
-      window.handleAuth = async function () {
+      // ───────── AUTH UI ─────────
+
+      window.linkAccount = async function () {
         const email = authEmail.value.trim();
         const password = authPassword.value;
 
@@ -445,43 +425,16 @@
         }
 
         try {
-          const credential = EmailAuthProvider.credential(email, password);
-
-          if (auth.currentUser.isAnonymous) {
-            await linkWithCredential(auth.currentUser, credential);
-            alert("Account created. Your data is now synced.");
-          } else {
-            await signInWithEmailAndPassword(auth, email, password);
-          }
-        } catch (err) {
-          if (err.code === "auth/email-already-in-use") {
-            await signInWithEmailAndPassword(auth, email, password);
-          } else {
-            alert(err.message);
-          }
-        }
-      };
-
-      window.linkAccount = async function () {
-        const email = document.getElementById("authEmail").value.trim();
-        const password = document.getElementById("authPassword").value;
-
-        if (!email || !password) {
-          alert("Enter email and password");
-          return;
-        }
-
-        try {
-          const credential = EmailAuthProvider.credential(email, password);
-          await linkWithCredential(auth.currentUser, credential);
+          await upgradeAnonymousAccount(email, password);
           alert("Account created. Your data is now synced.");
         } catch (err) {
           alert(err.message);
         }
       };
+
       window.signIn = async function () {
-        const email = document.getElementById("authEmail").value.trim();
-        const password = document.getElementById("authPassword").value;
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
 
         if (!email || !password) {
           alert("Enter email and password");
@@ -489,14 +442,14 @@
         }
 
         try {
-          await signInWithEmailAndPassword(auth, email, password);
-          document.getElementById("authPanel").style.display = "none";
+          await signIn(email, password);
         } catch (err) {
           alert(err.message);
         }
       };
 
-      // ADD TASK
+      // ───────── TASKS ─────────
+
       window.addTask = async function () {
         const title = taskTitle.value.trim();
         const urgency = taskUrgency.value;
@@ -504,22 +457,19 @@
 
         if (!title) return alert("Task needs a name");
 
-        const task = {
+        await addDoc(collection(db, "users", uid, "tasks"), {
           title,
           urgency,
           notes: noteText ? [{ text: noteText, date: Date.now() }] : [],
           createdAt: Date.now(),
           completed: false,
           completedAt: null,
-        };
-
-        await addDoc(collection(db, "users", uid, "tasks"), task);
+        });
 
         taskTitle.value = "";
         taskNote.value = "";
       };
 
-      // LOAD + RENDER TASKS
       function loadTasks() {
         const q = query(
           collection(db, "users", uid, "tasks"),
@@ -532,86 +482,56 @@
           list.innerHTML = "";
 
           snap.forEach((docSnap) => {
-            const task = docSnap.data();
-            const el = renderTask(docSnap.id, task);
-            list.appendChild(el);
+            list.appendChild(renderTask(docSnap.id, docSnap.data()));
           });
         });
       }
 
-      // TASK CARD
       function renderTask(id, task) {
         const div = document.createElement("div");
         div.className = `task-card ${task.urgency}`;
 
         div.innerHTML = `
-    <div class="task-header">
-      <div class="task-title">${task.title}</div>
-      <div class="urgency-badge">${task.urgency}</div>
-    </div>
+      <div class="task-header">
+        <div class="task-title">${task.title}</div>
+        <div class="urgency-badge">${task.urgency}</div>
+      </div>
 
-    <div class="task-meta">
-      Created ${new Date(task.createdAt).toLocaleDateString()}
-    </div>
+      <div class="task-meta">
+        Created ${new Date(task.createdAt).toLocaleDateString()}
+      </div>
 
-    <div class="task-notes">
-      ${task.notes
-        .map(
-          (n) => `
-        <div class="note">
-          ${n.text}
-          <small>${new Date(n.date).toLocaleString()}</small>
-        </div>
-      `
-        )
-        .join("")}
-    </div>
-
-    <textarea
-      placeholder="Add note and press Enter"
-      onkeydown="addNote(event, '${id}')"
-    ></textarea>
-
-    <div class="subtasks">
-      <ul>
-        ${(task.subtasks || [])
+      <div class="task-notes">
+        ${(task.notes || [])
           .map(
-            (s, i) => `
-          <li class="${s.completed ? "done" : ""}">
-               <span>${s.text}</span>
-            <input
-              type="checkbox"
-              ${s.completed ? "checked" : ""}
-              onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
-            />
-         
-          </li>
+            (n) => `
+          <div class="note">
+            ${n.text}
+            <small>${new Date(n.date).toLocaleString()}</small>
+          </div>
         `
           )
           .join("")}
-      </ul>
+      </div>
 
-      <input
-        class="subtask-input"
-        placeholder="Add subtask and press Enter"
-        onkeydown="addSubtask(event, '${id}')"
-      />
-    </div>
+      <textarea
+        placeholder="Add note and press Enter"
+        onkeydown="addNote(event, '${id}')"
+      ></textarea>
 
-    <div class="task-actions">
-      ${
-        task.completed
-          ? `<span style="color: var(--urgency-low)">Completed</span>`
-          : `<span onclick="completeTask('${id}')">Complete</span>`
-      }
-      <span onclick="deleteTask('${id}')">Delete</span>
-    </div>
-  `;
+      <div class="task-actions">
+        ${
+          task.completed
+            ? `<span style="color: var(--urgency-low)">Completed</span>`
+            : `<span onclick="completeTask('${id}')">Complete</span>`
+        }
+        <span onclick="deleteTask('${id}')">Delete</span>
+      </div>
+    `;
 
         return div;
       }
 
-      // ADD NOTE
       window.addNote = async function (e, taskId) {
         if (e.key !== "Enter") return;
 
@@ -625,7 +545,6 @@
         });
       };
 
-      // COMPLETE TASK
       window.completeTask = async function (taskId) {
         await updateDoc(doc(db, "users", uid, "tasks", taskId), {
           completed: true,
@@ -633,35 +552,8 @@
         });
       };
 
-      // DELETE TASK
       window.deleteTask = async function (taskId) {
         await deleteDoc(doc(db, "users", uid, "tasks", taskId));
-      };
-
-      window.addSubtask = async function (e, taskId) {
-        if (e.key !== "Enter") return;
-
-        const text = e.target.value.trim();
-        if (!text) return;
-
-        e.target.value = "";
-
-        await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-          subtasks: arrayUnion({ text, completed: false }),
-        });
-      };
-
-      window.toggleSubtask = async function (taskId, index, current) {
-        const ref = doc(db, "users", uid, "tasks", taskId);
-
-        const snap = await getDoc(ref);
-        const task = snap.data();
-
-        task.subtasks[index].completed = !current;
-
-        await updateDoc(ref, {
-          subtasks: task.subtasks,
-        });
       };
     </script>
 

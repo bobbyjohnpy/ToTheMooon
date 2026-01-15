@@ -42,20 +42,19 @@
       <a href="notes.html">Notes</a>
       <a href="progress.html">Progress</a>
     </nav>
-  <main>
-
-  <!-- AUTH BOX -->
-  <div id="authBox" style="display:none; margin-bottom:12px;">
-    <input id="authEmail" type="email" placeholder="Email" />
-    <input id="authPassword" type="password" placeholder="Password" />
-    <button onclick="handleAuth()">Sign in / Create account</button>
-  </div>
-
-  <!-- rest of page content -->
-
-    <!-- Page-specific content -->
     <main>
-      <h1>Tasks</h1>
+      <!-- AUTH BOX -->
+      <div id="authBox" style="display: none; margin-bottom: 12px">
+        <input id="authEmail" type="email" placeholder="Email" />
+        <input id="authPassword" type="password" placeholder="Password" />
+        <button onclick="handleAuth()">Sign in / Create account</button>
+      </div>
+
+      <!-- rest of page content -->
+
+      <!-- Page-specific content -->
+
+      <h1>Notes</h1>
       <!-- Page UI goes here -->
     </main>
     <!-- Firebase + Firestore -->
@@ -65,54 +64,14 @@
         getFirestore,
         enableIndexedDbPersistence,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-  import {
-  EmailAuthProvider,
-  linkWithCredential,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-onAuthStateChanged(auth, (user) => {
-  if (!user) return;
-
-  uid = user.uid;
-
-  if (user.isAnonymous) {
-    document.getElementById("authBox").style.display = "block";
-  } else {
-    document.getElementById("authBox").style.display = "none";
-  }
-
-  loadTasks(); // or loadNotes / loadProgress depending on page
-});
-window.handleAuth = async function () {
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
-
-  if (!email || !password) {
-    alert("Enter email and password");
-    return;
-  }
-
-  try {
-    const credential = EmailAuthProvider.credential(email, password);
-
-    if (auth.currentUser.isAnonymous) {
-      await linkWithCredential(auth.currentUser, credential);
-      alert("Account created. Your data is now synced.");
-    } else {
-      await signInWithEmailAndPassword(auth, email, password);
-    }
-  } catch (err) {
-    if (err.code === "auth/email-already-in-use") {
-      await signInWithEmailAndPassword(auth, email, password);
-    } else {
-      alert(err.message);
-    }
-  }
-};
-
-
+      import {
+        getAuth,
+        onAuthStateChanged,
+        EmailAuthProvider,
+        linkWithCredential,
+        signInWithEmailAndPassword,
+        signInAnonymously,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
       const firebaseConfig = {
         apiKey: "YOUR_KEY",
@@ -125,13 +84,58 @@ window.handleAuth = async function () {
 
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
+      const auth = getAuth(app);
 
       enableIndexedDbPersistence(db).catch(() => {
         console.log("Offline persistence unavailable");
       });
 
+      // Anonymous sign-in
+      signInAnonymously(auth).catch(console.error);
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) return;
+
+        if (user.isAnonymous) {
+          authBox.style.display = "block";
+        } else {
+          authBox.style.display = "none";
+        }
+
+        // loadNotes(); // stub for now
+      });
+
+      window.handleAuth = async function () {
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+
+        if (!email || !password) {
+          alert("Enter email and password");
+          return;
+        }
+
+        try {
+          const credential = EmailAuthProvider.credential(email, password);
+
+          if (auth.currentUser.isAnonymous) {
+            await linkWithCredential(auth.currentUser, credential);
+            alert("Account linked successfully.");
+          } else {
+            await signInWithEmailAndPassword(auth, email, password);
+          }
+        } catch (err) {
+          if (err.code === "auth/email-already-in-use") {
+            await signInWithEmailAndPassword(auth, email, password);
+          } else {
+            alert(err.message);
+          }
+        }
+      };
+
       window.db = db;
+      window.auth = auth;
     </script>
+
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js");
