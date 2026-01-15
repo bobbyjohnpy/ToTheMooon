@@ -151,34 +151,34 @@ export function renderTask(id, task) {
       <span class="delete-task">Delete</span>
     </div>
 
-      <div class="subtasks">
-  <h4>Subtasks</h4>
+      
+    <div class="subtasks">
+      <ul>
+        ${
+          task.subtasks
+            ?.map(
+              (s, i) => `
+          <li class="${s.completed ? "done" : ""}">
+            <input
+              type="checkbox"
+              class="subtask-toggle"
+              data-task-id="${id}"
+              data-index="${i}"
+              ${s.completed ? "checked" : ""}
+            />
+            <span>${s.text}</span>
+          </li>
+        `
+            )
+            .join("") || ""
+        }
+      </ul>
 
-  <ul>
-    ${
-      task.subtasks
-        ?.map(
-          (s, i) => `
-      <li class="${s.completed ? "done" : ""}">
-        <input
-          type="checkbox"
-          ${s.completed ? "checked" : ""}
-          onchange="toggleSubtask('${id}', ${i}, ${s.completed})"
-        />
-        <span>${s.text}</span>
-      </li>
-    `
-        )
-        .join("") || ""
-    }
-  </ul>
-<input
-  class="subtask-input"
-  placeholder="Add subtask and press Enter"
-  data-task-id="${id}"
-/>
-
-</div>
+      <input
+        class="subtask-input"
+        placeholder="Add subtask and press Enter"
+      />
+    </div>
   `;
 
   // ---------------------
@@ -198,6 +198,17 @@ export function renderTask(id, task) {
 
   const deleteBtn = div.querySelector(".delete-task");
   deleteBtn.addEventListener("click", () => deleteTask(id));
+
+  // 🔹 Wire subtask toggle
+  div.querySelectorAll(".subtask-toggle").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const taskId = checkbox.dataset.taskId;
+      const index = Number(checkbox.dataset.index);
+      const current = !checkbox.checked; // previous state
+
+      toggleSubtask(taskId, index, current);
+    });
+  });
 
   const input = div.querySelector(".subtask-input");
 
