@@ -375,149 +375,26 @@
       import { injectNav } from "./js/nav.js";
       injectNav("tasks");
 
-      import {
-        collection,
-        addDoc,
-        onSnapshot,
-        query,
-        orderBy,
-        doc,
-        getDoc,
-        deleteDoc,
-        updateDoc,
-        arrayUnion,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-      import { db } from "./js/firebase.js";
-      import {
-        initAuth,
-        getUID,
-        signIn,
-        upgradeAnonymousAccount,
-      } from "./js/auth.js";
-
       import { initAuthGate } from "./js/auth-gate.js";
-
-      initAuthGate((uid) => {
-        return loadTasks(uid);
-      });
-
       import { logout } from "./js/auth.js";
       window.logout = logout;
 
-      // -------------------------
-      // TASK LOADER
-      // -------------------------
-      function loadTasks(uid) {
-        if (!uid) return null;
+      import { loadTasks, addTask } from "./js/tasks.js";
 
-        const q = query(
-          collection(db, "users", uid, "tasks"),
-          orderBy("createdAt", "desc")
-        );
+      // Auth + load tasks
+      initAuthGate(loadTasks);
 
-        return onSnapshot(q, (snapshot) => {
-          const list = document.getElementById("taskList");
-          list.innerHTML = "";
-
-          snapshot.forEach((docSnap) => {
-            list.appendChild(renderTask(docSnap.id, docSnap.data()));
-          });
+      // Add task button
+      document
+        .querySelector(".addtask-button")
+        .addEventListener("click", () => {
+          const title = taskTitle.value.trim();
+          const urgency = taskUrgency.value;
+          const noteText = taskNote.value.trim();
+          addTask(title, urgency, noteText);
+          taskTitle.value = "";
+          taskNote.value = "";
         });
-      }
-
-      // ───────── AUTH UI ─────────
-
-      // ───────── TASKS ─────────
-
-      window.addTask = async function () {
-        const title = taskTitle.value.trim();
-        const urgency = taskUrgency.value;
-        const noteText = taskNote.value.trim();
-
-        if (!title) return alert("Task needs a name");
-
-        await addDoc(collection(db, "users", uid, "tasks"), {
-          title,
-          urgency,
-          notes: noteText ? [{ text: noteText, date: Date.now() }] : [],
-          createdAt: Date.now(),
-          completed: false,
-          completedAt: null,
-        });
-
-        taskTitle.value = "";
-        taskNote.value = "";
-      };
-
-      function renderTask(id, task) {
-        const div = document.createElement("div");
-        div.className = `task-card ${task.urgency}`;
-
-        div.innerHTML = `
-      <div class="task-header">
-        <div class="task-title">${task.title}</div>
-        <div class="urgency-badge">${task.urgency}</div>
-      </div>
-
-      <div class="task-meta">
-        Created ${new Date(task.createdAt).toLocaleDateString()}
-      </div>
-
-      <div class="task-notes">
-        ${(task.notes || [])
-          .map(
-            (n) => `
-          <div class="note">
-            ${n.text}
-            <small>${new Date(n.date).toLocaleString()}</small>
-          </div>
-        `
-          )
-          .join("")}
-      </div>
-
-      <textarea
-        placeholder="Add note and press Enter"
-        onkeydown="addNote(event, '${id}')"
-      ></textarea>
-
-      <div class="task-actions">
-        ${
-          task.completed
-            ? `<span style="color: var(--urgency-low)">Completed</span>`
-            : `<span onclick="completeTask('${id}')">Complete</span>`
-        }
-        <span onclick="deleteTask('${id}')">Delete</span>
-      </div>
-    `;
-
-        return div;
-      }
-
-      window.addNote = async function (e, taskId) {
-        if (e.key !== "Enter") return;
-
-        const text = e.target.value.trim();
-        if (!text) return;
-
-        e.target.value = "";
-
-        await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-          notes: arrayUnion({ text, date: Date.now() }),
-        });
-      };
-
-      window.completeTask = async function (taskId) {
-        await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-          completed: true,
-          completedAt: Date.now(),
-        });
-      };
-
-      window.deleteTask = async function (taskId) {
-        await deleteDoc(doc(db, "users", uid, "tasks", taskId));
-      };
     </script>
     <script type="module" src="./js/auth-ui.js"></script>
     <script>
