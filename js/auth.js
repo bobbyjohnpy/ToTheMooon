@@ -1,21 +1,27 @@
+// js/auth.js
 import { auth } from "./firebase.js";
 import {
   onAuthStateChanged,
   signInAnonymously,
+  EmailAuthProvider,
+  linkWithCredential,
+  signInWithEmailAndPassword,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // 🔒 single source of truth
 let currentUser = null;
 let currentUID = null;
+let readyCallbacks = [];
 
 export function initAuth(onReady) {
+  if (onReady) readyCallbacks.push(onReady);
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       await signInAnonymously(auth);
       return;
     }
 
-    // ✅ user exists ONLY here
     currentUser = user;
     currentUID = user.uid;
 
@@ -24,8 +30,8 @@ export function initAuth(onReady) {
       authPanel.style.display = user.isAnonymous ? "flex" : "none";
     }
 
-    // ✅ notify page when auth is ready
-    if (onReady) onReady(user);
+    readyCallbacks.forEach((cb) => cb(user));
+    readyCallbacks = [];
   });
 }
 
@@ -35,4 +41,19 @@ export function getUID() {
 
 export function getUser() {
   return currentUser;
+}
+
+// ───────── AUTH ACTIONS ─────────
+
+export async function signIn(email, password) {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export async function upgradeAnonymousAccount(email, password) {
+  if (!currentUser || !currentUser.isAnonymous) {
+    throw new Error("No anonymous user to upgrade");
+  }
+
+  const credential = EmailAuthProvider.credential(email, password);
+  return linkWithCredential(currentUser, credential);
 }
