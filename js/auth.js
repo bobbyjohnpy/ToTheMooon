@@ -32,13 +32,13 @@ export function initAuth(onReady) {
     }
 
     readyCallbacks.forEach((cb) => cb(user));
+
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (logoutBtn) {
+      logoutBtn.style.display = user.isAnonymous ? "none" : "inline-block";
+    }
   });
-
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  if (logoutBtn) {
-    logoutBtn.style.display = user.isAnonymous ? "none" : "inline-block";
-  }
 }
 
 export function getUID() {
