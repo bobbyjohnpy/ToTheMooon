@@ -14,16 +14,18 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let uid = null;
+let projectId = null;
 
 // ---------------------
 // Load Tasks
 // ---------------------
-export function loadTasks(userId) {
-  if (!userId) return null;
+export function loadTasks(userId, activateProjectId) {
+  if (!userId || !activateProjectId) return null;
   uid = userId;
+  projectId = activateProjectId;
 
   const q = query(
-    collection(db, "users", uid, "tasks"),
+    collection(db, "users", uid, "projects", projectId, "tasks"),
     orderBy("createdAt", "desc")
   );
 
@@ -33,7 +35,7 @@ export function loadTasks(userId) {
 
     list.innerHTML = "";
     snapshot.forEach((docSnap) => {
-      list.appendChild(renderTask(uid, docSnap.id, docSnap.data()));
+      list.appendChild(renderTask(uid, projectId, docSnap.id, docSnap.data()));
     });
   });
 }
@@ -41,17 +43,17 @@ export function loadTasks(userId) {
 // ---------------------
 // Add Task
 // ---------------------
-export async function addTask(title, urgency, noteText) {
+export async function addTask(title, status = "todo", noteText = "") {
   if (!title) return alert("Task needs a name");
-  if (!uid) return alert("User not authenticated");
+  if (!uid || !projectId) return alert("User or project not authenticated");
 
-  await addDoc(collection(db, "users", uid, "tasks"), {
+  await addDoc(collection(db, "users", uid, "projects", projectId, "tasks"), {
     title,
-    urgency,
+    status,
     notes: noteText ? [{ text: noteText, date: Date.now() }] : [],
+    subtasks: [],
     createdAt: Date.now(),
-    completed: false,
-    completedAt: null,
+    assignedAt: Date.now(),
   });
 }
 
@@ -59,30 +61,37 @@ export async function addTask(title, urgency, noteText) {
 // Add Note
 // ---------------------
 export async function addNote(taskId, text) {
-  if (!text || !uid) return;
+  if (!text || !uid || !projectId) return;
 
-  await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-    notes: arrayUnion({ text, date: Date.now() }),
-  });
+  await updateDoc(
+    doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+    {
+      notes: arrayUnion({ text, date: Date.now() }),
+    }
+  );
 }
 
 // ---------------------
-// Complete Task
+// Update Task Status
 // ---------------------
-export async function completeTask(taskId) {
-  if (!uid) return;
-  await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-    completed: true,
-    completedAt: Date.now(),
-  });
+export async function updateTaskStatus(taskId, newStatus) {
+  if (!uid || !projectId) return;
+  await updateDoc(
+    doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+    {
+      status: newStatus,
+    }
+  );
 }
 
 // ---------------------
 // Delete Task
 // ---------------------
 export async function deleteTask(taskId) {
-  if (!uid) return;
-  await deleteDoc(doc(db, "users", uid, "tasks", taskId));
+  if (!uid || !projectId) return;
+  await deleteDoc(
+    doc(db, "users", uid, "projects", projectId, "tasks", taskId)
+  );
 }
 
 export async function addSubtask(e, taskId) {
@@ -93,13 +102,16 @@ export async function addSubtask(e, taskId) {
 
   e.target.value = "";
 
-  await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-    subtasks: arrayUnion({ text, completed: false }),
-  });
+  await updateDoc(
+    doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+    {
+      subtasks: arrayUnion({ text, completed: false }),
+    }
+  );
 }
 
-export async function toggleSubtask(uid, taskId, index, current) {
-  const ref = doc(db, "users", uid, "tasks", taskId);
+export async function toggleSubtask(taskId, index, current) {
+  const ref = doc(db, "users", uid, "projects", projectId, "tasks", taskId);
 
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
@@ -162,6 +174,7 @@ export function renderTask(uid, id, task) {
             ?.map(
               (s, i) => `
           <li class="${s.completed ? "done" : ""}">
+             <span>${s.text}</span>
             <input
               type="checkbox"
               class="subtask-toggle"
@@ -169,7 +182,7 @@ export function renderTask(uid, id, task) {
               data-index="${i}"
               ${s.completed ? "checked" : ""}
             />
-            <span>${s.text}</span>
+         
           </li>
         `
             )

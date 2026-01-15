@@ -165,12 +165,27 @@
             <h3>Welcome</h3>
             <p>This is your founder dashboard. More coming next.</p>
           </div>
+
+          <!-- CREATE PROJECT -->
+          <div class="card" id="createProjectSection">
+            <h3>New Project</h3>
+            <input id="projectName" placeholder="Project name" />
+            <textarea
+              id="projectNotes"
+              placeholder="Initial notes (optional)"
+              style="min-height: 60px"
+            ></textarea>
+            <button id="createProjectBtn">Create Project</button>
+          </div>
+
+          <!-- PROJECTS LIST -->
+          <div id="projectsList"></div>
         </main>
       </div>
     </div>
     <script type="module">
-      import { injectNav } from "./js/nav.js";
-      injectNav("index"); // replace "dashboard" with the current page: "tasks", "notes", etc.
+      import { injectNav, updateProjectSwitcher } from "./js/nav.js";
+      injectNav("dashboard");
 
       import { initAuthGate } from "./js/auth-gate.js";
       import { logout } from "./js/auth.js";
@@ -178,10 +193,74 @@
 
       import "./js/auth-ui.js"; // bring in linkAccount/signIn globally
 
-      initAuthGate((uid) => {
-        // For pages without page-specific content, do nothing
-        // For tasks.html, we call loadTasks(uid)
+      import {
+        initProjectContext,
+        getActiveProjectId,
+      } from "./js/project-context.js";
+      import { loadProjects, createProject } from "./js/projects.js";
+
+      initAuthGate((userId) => {
+        // Load and display projects
+        loadProjects(userId, (projects) => {
+          // Set active project if not set
+          if (!getActiveProjectId() && projects.length > 0) {
+            initProjectContext(projects[0].id);
+          } else {
+            initProjectContext(getActiveProjectId());
+          }
+
+          // Update project switcher
+          updateProjectSwitcher(projects);
+
+          // Display projects list
+          displayProjects(projects);
+        });
+
+        // Create project handler
+        document
+          .getElementById("createProjectBtn")
+          .addEventListener("click", async () => {
+            const name = document.getElementById("projectName").value.trim();
+            const notes = document.getElementById("projectNotes").value.trim();
+
+            if (!name) {
+              alert("Project name required");
+              return;
+            }
+
+            try {
+              await createProject(userId, name, notes);
+              document.getElementById("projectName").value = "";
+              document.getElementById("projectNotes").value = "";
+              // Projects will refresh automatically via listener
+            } catch (err) {
+              alert("Error creating project: " + err.message);
+            }
+          });
       });
+
+      function displayProjects(projects) {
+        const list = document.getElementById("projectsList");
+        list.innerHTML = "";
+
+        if (projects.length === 0) {
+          list.innerHTML = "<p>No projects yet. Create one to get started.</p>";
+          return;
+        }
+
+        projects.forEach((project) => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+            <h3>${project.name}</h3>
+            <p>Status: ${project.status}</p>
+            <small>Created ${new Date(
+              project.createdAt
+            ).toLocaleDateString()}</small>
+          `;
+          list.appendChild(div);
+        });
+      }
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -190,15 +269,6 @@
           });
         });
       }
-
-      // Optional: Detect beforeinstallprompt to trigger install UI
-      let deferredPrompt;
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log("PWA install prompt available");
-        // You can later trigger with: deferredPrompt.prompt();
-      });
     </script>
     <!-- Service Worker -->
     <script>
