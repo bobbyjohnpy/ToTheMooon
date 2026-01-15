@@ -31,7 +31,6 @@ export function initAuth(onReady) {
     }
 
     readyCallbacks.forEach((cb) => cb(user));
-    readyCallbacks = [];
   });
 }
 

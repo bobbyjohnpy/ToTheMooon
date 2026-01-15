@@ -402,27 +402,33 @@
       let uid = null;
 
       // ✅ AUTH GATE (single entry point)
-      initAuth(() => {
-        const uid = getUID();
-        loadTasks(uid);
+      let unsubscribeTasks = null;
+
+      initAuth((user) => {
+        const uid = user.uid;
+
+        // 🔥 detach old listener
+        if (unsubscribeTasks) unsubscribeTasks();
+
+        unsubscribeTasks = loadTasks(uid);
       });
 
       // -------------------------
       // TASK LOADER
       // -------------------------
       function loadTasks(uid) {
-        if (!uid) return;
+        if (!uid) return null;
 
         const q = query(
           collection(db, "users", uid, "tasks"),
           orderBy("createdAt", "desc")
         );
 
-        onSnapshot(q, (snap) => {
+        return onSnapshot(q, (snapshot) => {
           const list = document.getElementById("taskList");
           list.innerHTML = "";
 
-          snap.forEach((docSnap) => {
+          snapshot.forEach((docSnap) => {
             list.appendChild(renderTask(docSnap.id, docSnap.data()));
           });
         });
