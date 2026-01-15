@@ -363,7 +363,7 @@
             placeholder="Initial note (optional)"
           ></textarea>
 
-          <button class="addtask-button" onclick="addTask()">Add Task</button>
+          <button class="addtask-button">Add Task</button>
         </div>
 
         <!-- TASK LIST -->
@@ -379,15 +379,15 @@
       import { logout } from "./js/auth.js";
       window.logout = logout;
 
+      // Auth + load tasks
+      initAuthGate(loadTasks);
+
       import {
         loadTasks,
         addTask,
         addSubtask,
         toggleSubtask,
       } from "./js/tasks.js";
-
-      // Auth + load tasks
-      initAuthGate(loadTasks);
 
       // Add task button
       document
