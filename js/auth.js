@@ -12,12 +12,25 @@ let currentUser = null;
 const listeners = [];
 
 export function initAuth() {
-  signInAnonymously(auth);
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      await signInAnonymously(auth);
+      return;
+    }
 
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    listeners.forEach((cb) => cb(user));
+    // 🔒 User is now stable and final
+    uid = user.uid;
+
+    const authPanel = document.getElementById("authPanel");
+    if (user.isAnonymous) {
+      authPanel.style.display = "flex";
+    } else {
+      authPanel.style.display = "none";
+    }
+
+    loadTasks();
   });
+  console.log("AUTH UID:", user.uid, "anon:", user.isAnonymous);
 }
 
 export function onUserReady(cb) {
