@@ -392,7 +392,14 @@
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
       import { db } from "./js/firebase.js";
-      import { initAuth, getUID } from "./js/auth.js";
+      import {
+        initAuth,
+        getUID,
+        signIn,
+        upgradeAnonymousAccount,
+      } from "./js/auth.js";
+
+      let uid = null;
 
       // ✅ AUTH GATE (single entry point)
       initAuth(() => {
@@ -411,10 +418,16 @@
           orderBy("createdAt", "desc")
         );
 
-        onSnapshot(q, (snapshot) => {
-          // render tasks
+        onSnapshot(q, (snap) => {
+          const list = document.getElementById("taskList");
+          list.innerHTML = "";
+
+          snap.forEach((docSnap) => {
+            list.appendChild(renderTask(docSnap.id, docSnap.data()));
+          });
         });
       }
+
       // ───────── AUTH UI ─────────
 
       window.linkAccount = async function () {
@@ -471,23 +484,6 @@
         taskTitle.value = "";
         taskNote.value = "";
       };
-
-      function loadTasks() {
-        const q = query(
-          collection(db, "users", uid, "tasks"),
-          orderBy("completed"),
-          orderBy("createdAt", "desc")
-        );
-
-        onSnapshot(q, (snap) => {
-          const list = document.getElementById("taskList");
-          list.innerHTML = "";
-
-          snap.forEach((docSnap) => {
-            list.appendChild(renderTask(docSnap.id, docSnap.data()));
-          });
-        });
-      }
 
       function renderTask(id, task) {
         const div = document.createElement("div");
