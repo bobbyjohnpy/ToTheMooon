@@ -324,6 +324,9 @@
       <a href="tasks.html">Tasks</a>
       <a href="notes.html">Notes</a>
       <a href="progress.html">Progress</a>
+      <button id="logoutBtn" onclick="logout()" style="display: none">
+        Log out
+      </button>
     </nav>
     <div class="page-wrapper">
       <!-- AUTH BOX -->
@@ -412,6 +415,8 @@
 
         unsubscribeTasks = loadTasks(uid);
       });
+      import { logout } from "./js/auth.js";
+      window.logout = logout;
 
       // -------------------------
       // TASK LOADER
@@ -433,10 +438,6 @@
           });
         });
       }
-      import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      import { auth } from "./js/firebase.js";
-
-      await signOut(auth);
 
       // ───────── AUTH UI ─────────
 

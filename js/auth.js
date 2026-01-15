@@ -7,6 +7,7 @@ import {
   linkWithCredential,
   signInWithEmailAndPassword,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // 🔒 single source of truth
 let currentUser = null;
@@ -32,6 +33,12 @@ export function initAuth(onReady) {
 
     readyCallbacks.forEach((cb) => cb(user));
   });
+
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (logoutBtn) {
+    logoutBtn.style.display = user.isAnonymous ? "none" : "inline-block";
+  }
 }
 
 export function getUID() {
@@ -55,4 +62,8 @@ export async function upgradeAnonymousAccount(email, password) {
 
   const credential = EmailAuthProvider.credential(email, password);
   return linkWithCredential(currentUser, credential);
+}
+export async function logout() {
+  await signOut(auth);
+  location.reload(); // clean reset
 }
