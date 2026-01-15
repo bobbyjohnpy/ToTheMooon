@@ -79,6 +79,9 @@
       </main>
     </div>
     <script type="module">
+      import { injectNav } from "./js/nav.js";
+      injectNav("progress"); // replace "dashboard" with the current page: "tasks", "notes", etc.
+
       import { initAuthGate } from "./js/auth-gate.js";
       import { logout } from "./js/auth.js";
       window.logout = logout;
