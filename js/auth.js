@@ -1,50 +1,36 @@
-// js/auth.js
 import { auth } from "./firebase.js";
 import {
-  signInAnonymously,
   onAuthStateChanged,
-  EmailAuthProvider,
-  linkWithCredential,
-  signInWithEmailAndPassword,
+  signInAnonymously,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// 🔒 single source of truth
 let currentUser = null;
-const listeners = [];
+let currentUID = null;
 
-export function initAuth() {
+export function initAuth(onReady) {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       await signInAnonymously(auth);
       return;
     }
 
-    // 🔒 User is now stable and final
-    uid = user.uid;
+    // ✅ user exists ONLY here
+    currentUser = user;
+    currentUID = user.uid;
 
     const authPanel = document.getElementById("authPanel");
-    if (user.isAnonymous) {
-      authPanel.style.display = "flex";
-    } else {
-      authPanel.style.display = "none";
+    if (authPanel) {
+      authPanel.style.display = user.isAnonymous ? "flex" : "none";
     }
 
-    loadTasks();
+    // ✅ notify page when auth is ready
+    if (onReady) onReady(user);
   });
-  console.log("AUTH UID:", user.uid, "anon:", user.isAnonymous);
 }
 
-export function onUserReady(cb) {
-  if (currentUser) cb(currentUser);
-  listeners.push(cb);
-}
-
-export async function upgradeAnonymousAccount(email, password) {
-  const credential = EmailAuthProvider.credential(email, password);
-  return linkWithCredential(auth.currentUser, credential);
-}
-
-export async function signIn(email, password) {
-  return signInWithEmailAndPassword(auth, email, password);
+export function getUID() {
+  return currentUID;
 }
 
 export function getUser() {
