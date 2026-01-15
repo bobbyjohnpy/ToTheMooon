@@ -392,27 +392,29 @@
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
       import { db } from "./js/firebase.js";
-      import {
-        initAuth,
-        onUserReady,
-        signIn,
-        upgradeAnonymousAccount,
-      } from "./js/auth.js";
+      import { initAuth, getUID } from "./js/auth.js";
 
-      initAuth();
-
-      let uid = null;
-
-      onUserReady((user) => {
-        uid = user.uid;
-
-        document.getElementById("authPanel").style.display = user.isAnonymous
-          ? "flex"
-          : "none";
-
-        loadTasks();
+      // ✅ AUTH GATE (single entry point)
+      initAuth(() => {
+        const uid = getUID();
+        loadTasks(uid);
       });
 
+      // -------------------------
+      // TASK LOADER
+      // -------------------------
+      function loadTasks(uid) {
+        if (!uid) return;
+
+        const q = query(
+          collection(db, "users", uid, "tasks"),
+          orderBy("createdAt", "desc")
+        );
+
+        onSnapshot(q, (snapshot) => {
+          // render tasks
+        });
+      }
       // ───────── AUTH UI ─────────
 
       window.linkAccount = async function () {
