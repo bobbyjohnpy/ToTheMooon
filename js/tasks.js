@@ -10,6 +10,7 @@ import {
   updateDoc,
   deleteDoc,
   arrayUnion,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let uid = null;
@@ -32,7 +33,7 @@ export function loadTasks(userId) {
 
     list.innerHTML = "";
     snapshot.forEach((docSnap) => {
-      list.appendChild(renderTask(docSnap.id, docSnap.data()));
+      list.appendChild(renderTask(uid, docSnap.id, docSnap.data()));
     });
   });
 }
@@ -97,22 +98,24 @@ export async function addSubtask(e, taskId) {
   });
 }
 
-export async function toggleSubtask(taskId, index, current) {
+export async function toggleSubtask(uid, taskId, index, current) {
   const ref = doc(db, "users", uid, "tasks", taskId);
 
   const snap = await getDoc(ref);
-  const task = snap.data();
+  if (!snap.exists()) return;
 
+  const task = snap.data();
   task.subtasks[index].completed = !current;
 
   await updateDoc(ref, {
     subtasks: task.subtasks,
   });
 }
+
 // ---------------------
 // Render Task
 // ---------------------
-export function renderTask(id, task) {
+export function renderTask(uid, id, task) {
   const div = document.createElement("div");
   div.className = `task-card ${task.urgency}`;
 
@@ -204,9 +207,9 @@ export function renderTask(id, task) {
     checkbox.addEventListener("change", () => {
       const taskId = checkbox.dataset.taskId;
       const index = Number(checkbox.dataset.index);
-      const current = !checkbox.checked; // previous state
+      const current = !checkbox.checked;
 
-      toggleSubtask(taskId, index, current);
+      toggleSubtask(uid, taskId, index, current);
     });
   });
 
