@@ -52,50 +52,18 @@ let activeTaskId = null;
 
 // ---------------------
 // Add Task
-// ---------------------
-export async function addTask(title, urgency, noteText) {
-  if (!title) return alert("Task needs a name");
-  if (!uid) return alert("User not authenticated");
-
-  await addDoc(collection(db, "users", uid, "tasks"), {
-    title,
-    urgency,
-    notes: noteText ? [{ text: noteText, date: Date.now() }] : [],
-    createdAt: Date.now(),
-    completed: false,
-    completedAt: null,
-  });
-}
 
 // ---------------------
 // Add Note
 // ---------------------
-export async function addNote(taskId, text) {
-  if (!text || !uid) return;
-
-  await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-    notes: arrayUnion({ text, date: Date.now() }),
-  });
-}
 
 // ---------------------
 // Complete Task
 // ---------------------
-export async function completeTask(taskId) {
-  if (!uid) return;
-  await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-    completed: true,
-    completedAt: Date.now(),
-  });
-}
 
 // ---------------------
 // Delete Task
 // ---------------------
-export async function deleteTask(taskId) {
-  if (!uid) return;
-  await deleteDoc(doc(db, "users", uid, "tasks", taskId));
-}
 
 export async function addSubtask(e, taskId) {
   if (e.key !== "Enter") return;
@@ -127,85 +95,117 @@ export async function toggleSubtask(uid, taskId, index, current) {
 // ---------------------
 // Render Task
 // ---------------------
-export function renderTask(uid, id, task) {
+export function renderTask(uid, taskId, task) {
   const card = document.createElement("div");
-  card.className = "card";
+  card.className = "task-card";
   card.draggable = true;
-  card.dataset.id = id;
-
-  // Progress calculation
-  const total = task.subtasks?.length || 0;
-  const done = task.subtasks?.filter((s) => s.completed).length || 0;
-  const percent = total ? Math.round((done / total) * 100) : 0;
-
-  const progressBar =
-    task.status === "done"
-      ? `<div class="progress-done"><span style="width:100%"></span></div>`
-      : `<div class="progress"><span style="width:${percent}%"></span></div>`;
+  card.dataset.id = taskId;
 
   card.innerHTML = `
-    <h4>${task.title}</h4>
+    <div class="task-main">
+      <div class="task-title">${task.title}</div>
+      <div class="task-meta">
+        <span class="priority ${task.priority}">${task.priority}</span>
+        <span class="created">${new Date(
+          task.createdAt?.seconds * 1000
+        ).toLocaleDateString()}</span>
+      </div>
 
-    <div class="progress-meta">
-      <span>Subtasks</span>
-      <span>${done} / ${total}</span>
+      <div class="progress">
+        <div class="progress-bar" style="width:${calcProgress(task)}%"></div>
+      </div>
     </div>
 
-    ${progressBar}
-
-    <div class="priority ${task.urgency}">
-      ${task.urgency.toUpperCase()}
+    <div class="task-details hidden">
+      <div class="subtasks"></div>
+      <button class="add-subtask">+ Add Subtask</button>
     </div>
   `;
-  card.addEventListener("click", () => {
-    openTaskModal(task, id);
+
+  // Expand on click
+  card.querySelector(".task-main").addEventListener("click", () => {
+    card.querySelector(".task-details").classList.toggle("hidden");
+    renderSubtasks(card, task);
   });
 
+  enableDrag(card);
   return card;
 }
+function calcProgress(task) {
+  if (!task.subtasks?.length) return 0;
+  const done = task.subtasks.filter((s) => s.completed).length;
+  return Math.round((done / task.subtasks.length) * 100);
+}
 
-let draggedTaskId = null;
+import { Timestamp } from "firebase/firestore";
 
-// Drag start / end
-document.addEventListener("dragstart", (e) => {
-  const card = e.target.closest(".card");
-  if (!card) return;
+function renderSubtasks(card, task) {
+  const container = card.querySelector(".subtasks");
+  container.innerHTML = "";
 
-  draggedTaskId = card.dataset.id;
-  card.classList.add("dragging");
-});
+  task.subtasks?.forEach((s, index) => {
+    const row = document.createElement("div");
+    row.className = "subtask-row";
+    row.innerHTML = `
+      <input type="checkbox" ${s.completed ? "checked" : ""} />
+      <span>${s.text}</span>
+    `;
 
-document.addEventListener("dragend", (e) => {
-  const card = e.target.closest(".card");
-  if (!card) return;
+    row.querySelector("input").onchange = async () => {
+      const ref = doc(db, "users", uid, "tasks", card.dataset.id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      data.subtasks[index].completed = !data.subtasks[index].completed;
 
-  card.classList.remove("dragging");
-  draggedTaskId = null;
-});
-document.querySelectorAll(".column-body").forEach((body) => {
-  body.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    body.parentElement.classList.add("dragover");
+      await updateDoc(ref, { subtasks: data.subtasks });
+    };
+
+    container.appendChild(row);
   });
 
-  body.addEventListener("dragleave", () => {
-    body.parentElement.classList.remove("dragover");
+  card.querySelector(".add-subtask").onclick = async () => {
+    const text = prompt("Subtask name");
+    if (!text) return;
+
+    await updateDoc(doc(db, "users", uid, "tasks", card.dataset.id), {
+      subtasks: arrayUnion({
+        text,
+        completed: false,
+        createdAt: Timestamp.now(),
+      }),
+    });
+  };
+}
+
+function enableDrag(card) {
+  card.addEventListener("dragstart", () => {
+    card.classList.add("dragging");
   });
 
-  body.addEventListener("drop", async (e) => {
+  card.addEventListener("dragend", () => {
+    card.classList.remove("dragging");
+  });
+}
+
+document.querySelectorAll(".column-body").forEach((col) => {
+  col.addEventListener("dragover", (e) => {
     e.preventDefault();
-    body.parentElement.classList.remove("dragover");
+    const card = document.querySelector(".dragging");
+    if (!card) return;
+    col.appendChild(card);
+  });
 
-    if (!draggedTaskId) return;
+  col.addEventListener("drop", async () => {
+    const card = document.querySelector(".dragging");
+    if (!card) return;
 
-    let newStatus = body.id;
-    if (newStatus === "inprogress") newStatus = "progress";
-
-    await updateDoc(doc(db, "users", uid, "tasks", draggedTaskId), {
+    const newStatus = col.id;
+    await updateDoc(doc(db, "users", uid, "tasks", card.dataset.id), {
       status: newStatus,
     });
   });
 });
+
 function updateCounters() {
   document.getElementById("count-todo").textContent =
     document.querySelectorAll("#todo .card").length;
@@ -219,20 +219,7 @@ function updateCounters() {
   document.getElementById("count-done").textContent =
     document.querySelectorAll("#done .card").length;
 }
-import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export async function createTask(uid) {
-  const title = prompt("Task title?");
-  if (!title) return;
-
-  await addDoc(collection(db, "users", uid, "tasks"), {
-    title,
-    urgency: "medium",
-    status: "todo",
-    subtasks: [],
-    createdAt: Date.now(),
-  });
-}
 document.getElementById("newTaskBtn").addEventListener("click", () => {
   openTaskModal();
 });
@@ -266,21 +253,22 @@ document.getElementById("saveTaskBtn").addEventListener("click", async () => {
   const urgency = document.getElementById("taskPriorityInput").value;
 
   if (!title) return alert("Task needs a title");
+  document.getElementById("saveTaskBtn").onclick = async () => {
+    const title = document.getElementById("taskTitleInput").value.trim();
+    const priority = document.getElementById("taskPriorityInput").value;
 
-  if (activeTaskId) {
-    await updateDoc(doc(db, "users", uid, "tasks", activeTaskId), {
-      title,
-      urgency,
-    });
-  } else {
+    if (!title) return alert("Task needs a title");
+
     await addDoc(collection(db, "users", uid, "tasks"), {
       title,
-      urgency,
+      priority,
       status: "todo",
       subtasks: [],
-      createdAt: Date.now(),
+      createdAt: Timestamp.now(),
     });
-  }
+
+    closeModal();
+  };
 
   closeModal();
 });
