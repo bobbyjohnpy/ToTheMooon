@@ -510,7 +510,7 @@
         <p>Productivity App Redesign / Q4 Sprint</p>
       </div>
       <div class="actions">
-        <button class="btn primary">
+        <button class="btn primary" id="newTaskBtn">
           <span class="material-symbols-outlined">add</span>
           New Task
         </button>
@@ -584,7 +584,7 @@
 
       // Add task button
       document
-        .querySelector(".addtask-button")
+        .querySelector("#new-task-button")
         .addEventListener("click", () => {
           const title = taskTitle.value.trim();
           const urgency = taskUrgency.value;

@@ -127,82 +127,39 @@ export async function toggleSubtask(uid, taskId, index, current) {
 // Render Task
 // ---------------------
 export function renderTask(uid, id, task) {
-  const div = document.createElement("div");
-  div.className = "card"; // 🔑 match Kanban styles
-  div.classList.add("card");
-  div.draggable = true;
-  div.dataset.id = id;
+  const card = document.createElement("div");
+  card.className = "card";
+  card.draggable = true;
+  card.dataset.id = id;
 
-  div.innerHTML = `
+  // Progress calculation
+  const total = task.subtasks?.length || 0;
+  const done = task.subtasks?.filter((s) => s.completed).length || 0;
+  const percent = total ? Math.round((done / total) * 100) : 0;
+
+  const progressBar =
+    task.status === "done"
+      ? `<div class="progress-done"><span style="width:100%"></span></div>`
+      : `<div class="progress"><span style="width:${percent}%"></span></div>`;
+
+  card.innerHTML = `
     <h4>${task.title}</h4>
 
-    <div class="task-meta">
-      Created ${new Date(task.createdAt).toLocaleDateString()}
+    <div class="progress-meta">
+      <span>Subtasks</span>
+      <span>${done} / ${total}</span>
     </div>
 
-    <div class="task-notes">
-      ${(task.notes || [])
-        .map(
-          (n) => `<div class="note">
-            ${n.text}
-            <small>${new Date(n.date).toLocaleString()}</small>
-          </div>`
-        )
-        .join("")}
-    </div>
+    ${progressBar}
 
-    <textarea
-      placeholder="Add note and press Enter"
-      class="task-note-input"
-    ></textarea>
-
-    <div class="task-actions">
-      ${
-        task.completed
-          ? `<span style="color: var(--urgency-low)">Completed</span>`
-          : `<span class="complete-task">Complete</span>`
-      }
-      <span class="delete-task">Delete</span>
-    </div>
-
-    <div class="subtasks">
-      <ul>
-        ${
-          task.subtasks
-            ?.map(
-              (s, i) => `
-            <li class="${s.completed ? "done" : ""}">
-              <input
-                type="checkbox"
-                class="subtask-toggle"
-                data-task-id="${id}"
-                data-index="${i}"
-                ${s.completed ? "checked" : ""}
-              />
-              <span>${s.text}</span>
-            </li>
-          `
-            )
-            .join("") || ""
-        }
-      </ul>
-
-      <input
-        class="subtask-input"
-        placeholder="Add subtask and press Enter"
-      />
-    </div>
-
-    <!-- 🔹 PRIORITY BADGE (copied from Kanban design) -->
     <div class="priority ${task.urgency}">
       ${task.urgency.toUpperCase()}
     </div>
   `;
 
-  // listeners stay EXACTLY the same
-
-  return div;
+  return card;
 }
+
 let draggedTaskId = null;
 
 // Drag start / end
@@ -258,3 +215,24 @@ function updateCounters() {
   document.getElementById("count-done").textContent =
     document.querySelectorAll("#done .card").length;
 }
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+export async function createTask(uid) {
+  const title = prompt("Task title?");
+  if (!title) return;
+
+  await addDoc(collection(db, "users", uid, "tasks"), {
+    title,
+    urgency: "medium",
+    status: "todo",
+    subtasks: [],
+    createdAt: Date.now(),
+  });
+}
+document.getElementById("newTaskBtn").addEventListener("click", () => {
+  createTask(uid);
+});
