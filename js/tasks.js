@@ -28,12 +28,25 @@ export function loadTasks(userId) {
   );
 
   return onSnapshot(q, (snapshot) => {
-    const list = document.getElementById("taskList");
-    if (!list) return;
+    const columns = {
+      todo: document.getElementById("todo"),
+      started: document.getElementById("started"),
+      inprogress: document.getElementById("inprogress"),
+      done: document.getElementById("done"),
+    };
 
-    list.innerHTML = "";
+    // Clear columns
+    Object.values(columns).forEach((col) => {
+      if (col) col.innerHTML = "";
+    });
+
     snapshot.forEach((docSnap) => {
-      list.appendChild(renderTask(uid, docSnap.id, docSnap.data()));
+      const task = docSnap.data();
+      const status = task.status || "todo";
+      const column = columns[status];
+      if (!column) return;
+
+      column.appendChild(renderTask(uid, docSnap.id, task));
     });
   });
 }

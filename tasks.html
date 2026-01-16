@@ -367,7 +367,25 @@
         </div>
 
         <!-- TASK LIST -->
-        <div id="taskList"></div>
+       <div class="kanban">
+  <div class="column" data-status="todo">
+    <h3>To Do</h3>
+    <div class="column-body" id="todo"></div>
+  </div>
+ <div class="column" data-status="started">
+    <h3>Started</h3>
+    <div class="column-body" id="started"></div>
+  <div class="column" data-status="inprogress">
+    <h3>In Progress</h3>
+    <div class="column-body" id="inprogress"></div>
+  </div>
+
+  <div class="column" data-status="done">
+    <h3>Done</h3>
+    <div class="column-body" id="done"></div>
+  </div>
+</div>
+
       </main>
     </div>
 
