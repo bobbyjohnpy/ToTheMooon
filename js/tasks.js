@@ -99,14 +99,14 @@ export async function toggleSubtask(uid, taskId, index, current) {
 // ---------------------
 export function renderTask(uid, taskId, task) {
   const card = document.createElement("div");
-  card.className = `task-card priority-${task.urgency}`;
+  card.className = `card priority-${task.urgency}`;
   card.dataset.id = taskId;
   card.draggable = true;
 
   card.innerHTML = `
     <div class="task-header">
-      <div class="task-title">${task.title}</div>
-      <div class="priority-box ${task.urgency}"></div>
+      <h4>${task.title}</h4>
+      <div class="priority ${task.urgency}"></div>
     </div>
 
     <div class="progress">
