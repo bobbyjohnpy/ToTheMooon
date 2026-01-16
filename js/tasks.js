@@ -108,6 +108,11 @@ export function renderTask(uid, taskId, task) {
       <h4>${task.title}</h4>
  
     </div>
+    <div class="progress-meta"> <span>subtasks</span> <span>   ${
+      task.subtasks?.length
+        ? task.subtasks.filter((s) => s.completed).length
+        : 0
+    }/${task.subtasks?.length || 0}</span></div>
 
     <div class="progress">
       <div class="progress-bar" style="width:${calcProgress(task)}%"></div>
