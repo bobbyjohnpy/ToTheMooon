@@ -48,6 +48,7 @@ export function loadTasks(userId) {
     updateCounters();
   });
 }
+let activeTaskId = null;
 
 // ---------------------
 // Add Task
@@ -230,5 +231,77 @@ export async function createTask(uid) {
   });
 }
 document.getElementById("newTaskBtn").addEventListener("click", () => {
-  createTask(uid);
+  openTaskModal();
 });
+function openTaskModal(task = null, id = null) {
+  activeTaskId = id;
+
+  document.getElementById("taskModal").classList.remove("hidden");
+  document.getElementById("modalTitle").textContent = task
+    ? "Edit Task"
+    : "New Task";
+
+  document.getElementById("taskTitleInput").value = task?.title || "";
+  document.getElementById("taskPriorityInput").value =
+    task?.urgency || "medium";
+
+  const list = document.getElementById("subtaskList");
+  list.innerHTML = "";
+
+  (task?.subtasks || []).forEach((s) => {
+    const row = document.createElement("div");
+    row.textContent = `• ${s.text}`;
+    list.appendChild(row);
+  });
+
+  document.getElementById("taskMeta").textContent = task
+    ? `Created ${new Date(task.createdAt).toLocaleString()}`
+    : "";
+}
+document.getElementById("saveTaskBtn").addEventListener("click", async () => {
+  const title = document.getElementById("taskTitleInput").value.trim();
+  const urgency = document.getElementById("taskPriorityInput").value;
+
+  if (!title) return alert("Task needs a title");
+
+  if (activeTaskId) {
+    await updateDoc(doc(db, "users", uid, "tasks", activeTaskId), {
+      title,
+      urgency,
+    });
+  } else {
+    await addDoc(collection(db, "users", uid, "tasks"), {
+      title,
+      urgency,
+      status: "todo",
+      subtasks: [],
+      createdAt: Date.now(),
+    });
+  }
+
+  closeModal();
+});
+document
+  .getElementById("newSubtaskInput")
+  .addEventListener("keydown", async (e) => {
+    if (e.key !== "Enter" || !activeTaskId) return;
+
+    const text = e.target.value.trim();
+    if (!text) return;
+
+    await updateDoc(doc(db, "users", uid, "tasks", activeTaskId), {
+      subtasks: arrayUnion({
+        text,
+        completed: false,
+        createdAt: Date.now(),
+      }),
+    });
+
+    e.target.value = "";
+  });
+document.getElementById("cancelTaskBtn").addEventListener("click", closeModal);
+
+function closeModal() {
+  document.getElementById("taskModal").classList.add("hidden");
+  activeTaskId = null;
+}

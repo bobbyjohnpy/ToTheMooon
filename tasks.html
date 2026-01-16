@@ -359,6 +359,47 @@
       .mobile-nav {
         display: none;
       }
+      .modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-content input,
+.modal-content select {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: var(--column-bg);
+  color: var(--text-main);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
       @media (max-width: 768px) {
         .kanban {
           display: flex;
@@ -450,6 +491,39 @@
       }
     </style>
   </head>
+  <div id="taskModal" class="modal hidden">
+  <div class="modal-content">
+    <h3 id="modalTitle">New Task</h3>
+
+    <label>Task Name</label>
+    <input id="taskTitleInput" placeholder="Task title" />
+
+    <label>Priority</label>
+    <select id="taskPriorityInput">
+      <option value="high">High</option>
+      <option value="medium" selected>Medium</option>
+      <option value="low">Low</option>
+    </select>
+
+    <label>Subtasks</label>
+    <div id="subtaskList"></div>
+
+    <input
+      id="newSubtaskInput"
+      placeholder="Add subtask and press Enter"
+    />
+
+    <div class="modal-actions">
+      <button id="saveTaskBtn" class="btn primary">Save</button>
+      <button id="cancelTaskBtn" class="btn">Cancel</button>
+    </div>
+
+    <small id="taskMeta"></small>
+  </div>
+</div>
+
+<body>
+  
 
   <header>
     <div class="brand">
