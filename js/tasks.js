@@ -26,27 +26,29 @@ export function loadTasks(userId) {
     collection(db, "users", uid, "tasks"),
     orderBy("createdAt", "desc")
   );
-
-  return onSnapshot(q, (snapshot) => {
-    const columns = {
-      todo: document.getElementById("todo"),
-      started: document.getElementById("started"),
-      inprogress: document.getElementById("inprogress"),
-      done: document.getElementById("done"),
-    };
-
-    // Clear columns
-    Object.values(columns).forEach((col) => {
-      if (col) col.innerHTML = "";
-    });
-
-
-snapshot.forEach((docSnap) => {
-  const task = docSnap.data();
-  const el = renderTask(uid, docSnap.id, task);
-  columns[task.status || "todo"]?.appendChild(el);
-});
+return onSnapshot(q, (snapshot) => {
+  // Clear columns
+  ["todo", "started", "inprogress", "done"].forEach((id) => {
+    document.getElementById(id).innerHTML = "";
   });
+
+  snapshot.forEach((docSnap) => {
+    const task = docSnap.data();
+    const status = task.status || "todo";
+
+    const container = document.getElementById(
+      status === "progress" ? "inprogress" : status
+    );
+
+    if (!container) return;
+
+    container.appendChild(renderTask(uid, docSnap.id, task));
+  });
+
+  updateCounters();
+});
+
+  
 }
 
 // ---------------------
@@ -129,6 +131,9 @@ export async function toggleSubtask(uid, taskId, index, current) {
 export function renderTask(uid, id, task) {
   const div = document.createElement("div");
   div.className = "card"; // 🔑 match Kanban styles
+ div.classList.add("card");
+div.draggable = true;
+div.dataset.id = id;
 
   div.innerHTML = `
     <h4>${task.title}</h4>
@@ -199,4 +204,60 @@ export function renderTask(uid, id, task) {
   // listeners stay EXACTLY the same
   ...
   return div;
+}
+let draggedTaskId = null;
+
+// Drag start / end
+document.addEventListener("dragstart", (e) => {
+  const card = e.target.closest(".card");
+  if (!card) return;
+
+  draggedTaskId = card.dataset.id;
+  card.classList.add("dragging");
+});
+
+document.addEventListener("dragend", (e) => {
+  const card = e.target.closest(".card");
+  if (!card) return;
+
+  card.classList.remove("dragging");
+  draggedTaskId = null;
+});
+document.querySelectorAll(".column-body").forEach((body) => {
+  body.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    body.parentElement.classList.add("dragover");
+  });
+
+  body.addEventListener("dragleave", () => {
+    body.parentElement.classList.remove("dragover");
+  });
+
+  body.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    body.parentElement.classList.remove("dragover");
+
+    if (!draggedTaskId) return;
+
+    let newStatus = body.id;
+    if (newStatus === "inprogress") newStatus = "progress";
+
+    await updateDoc(
+      doc(db, "users", uid, "tasks", draggedTaskId),
+      { status: newStatus }
+    );
+  });
+});
+function updateCounters() {
+  document.getElementById("count-todo").textContent =
+    document.querySelectorAll("#todo .card").length;
+
+  document.getElementById("count-started").textContent =
+    document.querySelectorAll("#started .card").length;
+
+  document.getElementById("count-inprogress").textContent =
+    document.querySelectorAll("#inprogress .card").length;
+
+  document.getElementById("count-done").textContent =
+    document.querySelectorAll("#done .card").length;
 }
