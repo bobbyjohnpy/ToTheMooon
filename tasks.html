@@ -8,389 +8,123 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
 
-    <style>
-      :root {
-        --bg-page: #0f172a;
-        --bg-card: #020617;
-        --bg-note: #020b1f;
-
-        --text-primary: #e5e7eb;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
-
-        --border-subtle: rgba(255, 255, 255, 0.06);
-
-        --urgency-high: #ef4444;
-        --urgency-medium: #f59e0b;
-        --urgency-low: #22c55e;
-      }
-
-      /* ───────── Base Layout ───────── */
-
-      body {
-        margin: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        background: var(--bg-page);
-        color: var(--text-primary);
-      }
-
-      nav {
-        display: flex;
-        justify-content: space-around;
-        padding: 12px;
-        background: #020617;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
-
-      nav a {
-        color: var(--text-secondary);
-        text-decoration: none;
-        font-size: 14px;
-      }
-
-      nav a:hover {
-        color: var(--text-primary);
-      }
-      .page-wrapper {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-      }
-      main {
-        width: 80%;
-        padding: 16px;
-        max-width: 720px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-      }
-
-      h1 {
-        margin-top: 0;
-        font-size: 20px;
-        font-weight: 600;
-      }
-
-      /* ───────── Inputs (Add Task Area) ───────── */
-
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 10px 0px;
-        margin-top: 6px;
-        border-radius: 8px;
-        border: none;
-        font-size: 14px;
-        background: #020617;
-        color: var(--text-primary);
-      }
-
-      textarea {
-        resize: vertical;
-      }
-
-      button {
-        margin-top: 8px;
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-
-      /* ───────── Task Card ───────── */
-
-      .task-card {
-        background: var(--bg-card);
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-bottom: 10px;
-
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .add-task {
-        display: flex;
-        flex-direction: column;
-      }
-      /* Urgency accent (ONLY visual urgency) */
-      .task-card.high {
-        border-left: 3px solid var(--urgency-high);
-      }
-      .task-card.medium {
-        border-left: 3px solid var(--urgency-medium);
-      }
-      .task-card.low {
-        border-left: 3px solid var(--urgency-low);
-      }
-
-      /* ───────── Task Header ───────── */
-
-      .task-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .task-title {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-primary);
-      }
-
-      .urgency-badge {
-        font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text-secondary);
-        text-transform: capitalize;
-      }
-
-      /* ───────── Meta ───────── */
-
-      .task-meta {
-        font-size: 11px;
-        color: var(--text-muted);
-      }
-      #authPanel {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-      }
-      /* ───────── Notes ───────── */
-
-      .task-notes {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .note {
-        background: var(--bg-note);
-        padding: 6px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        color: var(--text-primary);
-      }
-
-      .note small {
-        display: block;
-        margin-top: 2px;
-        font-size: 10px;
-        color: var(--text-muted);
-      }
-
-      /* ───────── Subtasks ───────── */
-
-      .subtasks {
-        margin-top: 4px;
-      }
-
-      .subtasks ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .subtasks li {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: var(--text-primary);
-      }
-
-      .subtasks li.done span {
-        text-decoration: line-through;
-        color: var(--text-muted);
-      }
-
-      .subtask-input {
-        margin-top: 4px;
-        background: transparent;
-        border: none;
-        border-bottom: 1px solid var(--border-subtle);
-        padding: 4px 0;
-        font-size: 12px;
-        color: var(--text-primary);
-      }
-
-      /* ───────── Actions (INLINE, NOT BUTTONS) ───────── */
-
-      .task-actions {
-        display: flex;
-        gap: 12px;
-        font-size: 12px;
-      }
-
-      .task-actions span {
-        cursor: pointer;
-        color: var(--text-secondary);
-      }
-
-      .task-actions span:hover {
-        color: var(--text-primary);
-      }
-      /* ───────── Mobile Refinements ───────── */
-      @media (max-width: 600px) {
-        main {
-          padding: 12px;
-          width: 85%;
-          margin: 0;
-        }
-        .addtask-button {
-          margin-bottom: 10px;
-        }
-        h1 {
-          font-size: 18px;
-        }
-
-        /* Task Card tightening */
-        .task-card {
-          padding: 10px 12px;
-          gap: 5px;
-        }
-
-        .task-title {
-          font-size: 13px;
-          line-height: 1.3;
-        }
-
-        .urgency-badge {
-          font-size: 10px;
-          padding: 2px 6px;
-        }
-
-        .task-meta {
-          font-size: 10px;
-        }
-
-        /* Notes: more compact */
-        .note {
-          font-size: 11px;
-          padding: 5px 6px;
-        }
-
-        .note small {
-          font-size: 9px;
-        }
-
-        /* Inputs feel lighter */
-        input,
-        select,
-        textarea {
-          padding: 10px 0px;
-          font-size: 13px;
-        }
-
-        textarea {
-          min-height: 48px;
-        }
-
-        /* Subtasks tighter */
-        .subtasks li {
-          font-size: 11px;
-          gap: 6px;
-        }
-
-        .subtask-input {
-          font-size: 11px;
-        }
-
-        /* Inline actions easier to tap (without buttons) */
-        .task-actions span {
-          padding: 4px 0;
-        }
-
-        /* Nav readability */
-        nav a {
-          font-size: 13px;
-        }
-      }
-    </style>
+    <style></style>
   </head>
 
-  <body>
-    <div class="page-wrapper">
-      <!-- AUTH BOX -->
-
-      <!--    
-  <div id="authBox" style="display:none; margin-bottom:12px;">
-    <input id="authEmail" type="email" placeholder="Email" />
-    <input id="authPassword" type="password" placeholder="Password" />
-    <button onclick="handleAuth()">Sign in / Create account</button>
-  </div> -->
-
-      <!-- rest of page content -->
-
-      <main>
-        <h1>Tasks</h1>
-        <div id="authPanel" style="display: none; margin-bottom: 16px">
-          <div class="card">
-            <small class="small">Account</small>
-
-            <input id="authEmail" type="email" placeholder="Email" />
-            <input id="authPassword" type="password" placeholder="Password" />
-
-            <div style="display: flex; gap: 12px; margin-top: 8px">
-              <span onclick="linkAccount()" style="cursor: pointer"
-                >Create Account</span
-              >
-              <span onclick="signIn()" style="cursor: pointer">Sign In</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ADD TASK -->
-        <div class="add-task">
-          <input id="taskTitle" placeholder="Task name" />
-
-          <select id="taskUrgency">
-            <option value="high">🔥 High</option>
-            <option value="medium">⚠️ Medium</option>
-            <option value="low">🟢 Low</option>
-          </select>
-
-          <textarea
-            id="taskNote"
-            placeholder="Initial note (optional)"
-          ></textarea>
-
-          <button class="addtask-button">Add Task</button>
-        </div>
-
-        <!-- TASK LIST -->
-       <div class="kanban">
-  <div class="column" data-status="todo">
-    <h3>To Do</h3>
-    <div class="column-body" id="todo"></div>
-  </div>
- <div class="column" data-status="started">
-    <h3>Started</h3>
-    <div class="column-body" id="started"></div>
-  <div class="column" data-status="inprogress">
-    <h3>In Progress</h3>
-    <div class="column-body" id="inprogress"></div>
-  </div>
-
-  <div class="column" data-status="done">
-    <h3>Done</h3>
-    <div class="column-body" id="done"></div>
-  </div>
-</div>
-
-      </main>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 48 48">
+        <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" />
+      </svg>
+      TaskMaster
     </div>
 
+    <nav>
+      <a class="active">Dashboard</a>
+      <a>Tasks</a>
+      <a>Calendar</a>
+      <a>Settings</a>
+    </nav>
+
+    <div class="nav-right">
+      <input type="search" placeholder="Search tasks..." />
+      <span class="material-symbols-outlined">notifications</span>
+      <div class="avatar"></div>
+
+      <!-- Dark mode toggle button -->
+      <button
+        id="darkModeToggle"
+        class="material-symbols-outlined"
+        style="
+          font-size: 24px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--text-main);
+        "
+      >
+        dark_mode
+      </button>
+    </div>
+  </header>
+  <div id="authPanel" style="display: none; margin-bottom: 16px">
+    <div class="card">
+      <small class="small">Account</small>
+
+      <input id="authEmail" type="email" placeholder="Email" />
+      <input id="authPassword" type="password" placeholder="Password" />
+
+      <div style="display: flex; gap: 12px; margin-top: 8px">
+        <span onclick="linkAccount()" style="cursor: pointer"
+          >Create Account</span
+        >
+        <span onclick="signIn()" style="cursor: pointer">Sign In</span>
+      </div>
+    </div>
+  </div>
+  <main>
+    <div class="page-header">
+      <div>
+        <h1>Project Kanban Board</h1>
+        <p>Productivity App Redesign / Q4 Sprint</p>
+      </div>
+      <div class="actions">
+        <button class="btn primary">
+          <span class="material-symbols-outlined">add</span>
+          New Task
+        </button>
+      </div>
+    </div>
+
+    <section class="kanban">
+      <div class="column">
+        <div class="column-header">TO DO <span id="count-todo">0</span></div>
+        <div class="column-body" id="todo"></div>
+      </div>
+
+      <div class="column">
+        <div class="column-header">
+          STARTED <span id="count-started">0</span>
+        </div>
+        <div class="column-body" id="started"></div>
+      </div>
+
+      <div class="column active">
+        <div class="column-header">
+          IN PROGRESS <span id="count-inprogress">0</span>
+        </div>
+        <div class="column-body" id="inprogress"></div>
+      </div>
+
+      <div class="column">
+        <div class="column-header">FINISHED <span id="count-done">0</span></div>
+        <div class="column-body" id="done"></div>
+      </div>
+    </section>
+  </main>
+  <nav class="mobile-nav">
+    <a href="#">
+      <span class="material-symbols-outlined">home</span>
+      <div>Home</div>
+    </a>
+
+    <a href="#">
+      <span class="material-symbols-outlined">view_kanban</span>
+      <div>Tasks</div>
+    </a>
+
+    <a href="#">
+      <span class="material-symbols-outlined">add</span>
+      <div>New</div>
+    </a>
+
+    <a href="#">
+      <span class="material-symbols-outlined">settings</span>
+      <div>Settings</div>
+    </a>
+  </nav>
+  <body>
     <script type="module">
-      import { injectNav } from "./js/nav.js";
       injectNav("tasks");
 
       import { initAuthGate } from "./js/auth-gate.js";
