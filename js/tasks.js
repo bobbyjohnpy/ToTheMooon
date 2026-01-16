@@ -157,6 +157,9 @@ export function renderTask(uid, id, task) {
       ${task.urgency.toUpperCase()}
     </div>
   `;
+  card.addEventListener("click", () => {
+    openTaskModal(task, id);
+  });
 
   return card;
 }

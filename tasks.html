@@ -656,17 +656,7 @@
         toggleSubtask,
       } from "./js/tasks.js";
 
-      // Add task button
-      document
-        .querySelector("#new-task-button")
-        .addEventListener("click", () => {
-          const title = taskTitle.value.trim();
-          const urgency = taskUrgency.value;
-          const noteText = taskNote.value.trim();
-          addTask(title, urgency, noteText);
-          taskTitle.value = "";
-          taskNote.value = "";
-        });
+   
     </script>
     <script type="module" src="./js/auth-ui.js"></script>
     <script>
