@@ -26,29 +26,27 @@ export function loadTasks(userId) {
     collection(db, "users", uid, "tasks"),
     orderBy("createdAt", "desc")
   );
-return onSnapshot(q, (snapshot) => {
-  // Clear columns
-  ["todo", "started", "inprogress", "done"].forEach((id) => {
-    document.getElementById(id).innerHTML = "";
+  return onSnapshot(q, (snapshot) => {
+    // Clear columns
+    ["todo", "started", "inprogress", "done"].forEach((id) => {
+      document.getElementById(id).innerHTML = "";
+    });
+
+    snapshot.forEach((docSnap) => {
+      const task = docSnap.data();
+      const status = task.status || "todo";
+
+      const container = document.getElementById(
+        status === "progress" ? "inprogress" : status
+      );
+
+      if (!container) return;
+
+      container.appendChild(renderTask(uid, docSnap.id, task));
+    });
+
+    updateCounters();
   });
-
-  snapshot.forEach((docSnap) => {
-    const task = docSnap.data();
-    const status = task.status || "todo";
-
-    const container = document.getElementById(
-      status === "progress" ? "inprogress" : status
-    );
-
-    if (!container) return;
-
-    container.appendChild(renderTask(uid, docSnap.id, task));
-  });
-
-  updateCounters();
-});
-
-  
 }
 
 // ---------------------
@@ -131,9 +129,9 @@ export async function toggleSubtask(uid, taskId, index, current) {
 export function renderTask(uid, id, task) {
   const div = document.createElement("div");
   div.className = "card"; // 🔑 match Kanban styles
- div.classList.add("card");
-div.draggable = true;
-div.dataset.id = id;
+  div.classList.add("card");
+  div.draggable = true;
+  div.dataset.id = id;
 
   div.innerHTML = `
     <h4>${task.title}</h4>
@@ -202,7 +200,7 @@ div.dataset.id = id;
   `;
 
   // listeners stay EXACTLY the same
-  ...
+
   return div;
 }
 let draggedTaskId = null;
@@ -242,10 +240,9 @@ document.querySelectorAll(".column-body").forEach((body) => {
     let newStatus = body.id;
     if (newStatus === "inprogress") newStatus = "progress";
 
-    await updateDoc(
-      doc(db, "users", uid, "tasks", draggedTaskId),
-      { status: newStatus }
-    );
+    await updateDoc(doc(db, "users", uid, "tasks", draggedTaskId), {
+      status: newStatus,
+    });
   });
 });
 function updateCounters() {
