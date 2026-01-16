@@ -106,7 +106,7 @@ export function renderTask(uid, taskId, task) {
   card.innerHTML = `
     <div class="task-header">
       <h4>${task.title}</h4>
-      <div class="priority ${task.urgency}"></div>
+ 
     </div>
 
     <div class="progress">
@@ -117,10 +117,11 @@ export function renderTask(uid, taskId, task) {
       <div class="subtasks"></div>
       <button class="add-subtask-btn">+ Add subtask</button>
     </div>
-
+  
     <div class="task-meta">
       Created ${new Date(task.createdAt).toLocaleString()}
     </div>
+         <div class="priority ${task.urgency}"></div>
   `;
   const details = card.querySelector(".task-details");
 
