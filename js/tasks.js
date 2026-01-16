@@ -140,13 +140,8 @@ export function renderTask(uid, taskId, task) {
 
     renderSubtasks(card, task);
   });
-  card.addEventListener("dragstart", () => {
-    card.classList.add("dragging");
-  });
-
-  card.addEventListener("dragend", () => {
-    card.classList.remove("dragging");
-  });
+  enableDrag(card);
+  return card;
 }
 
 function calcProgress(task) {
