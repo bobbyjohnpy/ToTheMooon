@@ -215,11 +215,7 @@ function updateCounters() {
   document.getElementById("count-done").textContent =
     document.querySelectorAll("#done .card").length;
 }
-import {
-  addDoc,
-  collection,
-  serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export async function createTask(uid) {
   const title = prompt("Task title?");
