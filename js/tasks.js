@@ -11,6 +11,7 @@ import {
   deleteDoc,
   arrayUnion,
   getDoc,
+  Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let uid = null;
@@ -136,8 +137,6 @@ function calcProgress(task) {
   const done = task.subtasks.filter((s) => s.completed).length;
   return Math.round((done / task.subtasks.length) * 100);
 }
-
-import { Timestamp } from "firebase/firestore";
 
 function renderSubtasks(card, task) {
   const container = card.querySelector(".subtasks");
