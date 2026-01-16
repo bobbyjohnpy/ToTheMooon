@@ -663,5 +663,26 @@
         navigator.serviceWorker.register("sw.js");
       }
     </script>
+    <script>
+  const cards = document.querySelectorAll(".task-card");
+
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      // Close all other cards
+      cards.forEach(c => {
+        if (c !== card) c.classList.remove("expanded");
+      });
+
+      // Toggle this card
+      card.classList.toggle("expanded");
+    });
+  });
+
+  // Prevent inner clicks from collapsing
+  document.querySelectorAll(".task-body").forEach(body => {
+    body.addEventListener("click", e => e.stopPropagation());
+  });
+</script>
+
   </body>
 </html>
