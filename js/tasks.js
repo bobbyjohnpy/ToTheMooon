@@ -121,7 +121,7 @@ export function renderTask(uid, taskId, task) {
     <div class="task-meta">
       Created ${new Date(task.createdAt).toLocaleString()}
     </div>
-         <div class="priority ${task.urgency}"></div>
+         <div class="priority ${task.urgency}">${task.urgency}</div>
   `;
   const details = card.querySelector(".task-details");
 
