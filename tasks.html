@@ -8,7 +8,444 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
 
-    <style></style>
+    <style>
+      :root {
+        --header-bg: #ffffff;
+        --primary: #1e6fd9;
+        --bg: #f6f7f8;
+        --column-bg: #f1f5f9;
+        --card-bg: #f4f7fb;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border: #dbe4ef;
+        --radius: 14px;
+        --shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+      }
+
+      /* Dark mode variables */
+      html.dark {
+        --header-bg: #334155;
+        --bg: #1f2937; /* dark gray-blue background */
+        --column-bg: #2c3e50; /* slightly lighter dark column */
+        --card-bg: #334155; /* dark bluish-gray for cards */
+        --text-main: #e0e7ff; /* light text */
+        --text-muted: #94a3b8; /* muted text in dark mode */
+        --border: #3f4c5a; /* subtle dark border */
+        --shadow: 0 6px 18px rgba(0, 0, 0, 0.6); /* stronger shadow for dark */
+      }
+
+      /* Reset */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text-main);
+        height: 100vh;
+      }
+
+      /* Top Nav */
+      header {
+        background: var(--header-bg);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 32px;
+        display: flex;
+        align-items: center;
+        gap: 36px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .brand svg {
+        width: 26px;
+        fill: var(--primary);
+      }
+
+      nav {
+        display: flex;
+        gap: 28px;
+      }
+
+      nav a {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-decoration: none;
+      }
+
+      nav a.active {
+        color: var(--primary);
+      }
+
+      .nav-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .nav-right input {
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 10px;
+        border: none;
+        background: #f1f5f9;
+      }
+
+      html.dark .nav-right input {
+        background: #3f4c5a;
+        color: var(--text-main);
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1e6fd9, #60a5fa);
+      }
+
+      /* Page */
+      main {
+        padding: 32px;
+        background: var(--bg);
+        height: fit-content;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+
+      .page-header h1 {
+        font-size: 34px;
+        font-weight: 900;
+      }
+
+      .page-header p {
+        color: var(--text-muted);
+        margin-top: 6px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn.primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 6px 16px rgba(30, 111, 217, 0.35);
+      }
+
+      /* Kanban */
+      .kanban {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(280px, 1fr));
+        gap: 24px;
+        min-height: 70%;
+      }
+
+      .column {
+        background: var(--column-bg);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+
+      .column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+      }
+
+      .column.active .column-header {
+        color: var(--primary);
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 8px;
+      }
+
+      /* Cards */
+      .card {
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        padding: 14px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card h4 {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      /* Progress */
+      .progress-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+
+      .progress,
+      .progress-done {
+        height: 6px;
+        background: #e5edf6;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      html.dark .progress {
+        background: #3f4c5a;
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        background: var(--primary);
+      }
+      .progress-done span {
+        display: block;
+        height: 100%;
+        background: #22c55e;
+      }
+      .card.done .priority.low {
+        background: rgba(220, 252, 231, 1);
+      }
+      .card.done .priority.low {
+        color: #22c55e;
+      }
+      /* Priority badge */
+      .priority {
+        position: static;
+        align-self: flex-start;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 8px;
+        margin-top: 4px;
+      }
+
+      .priority.high {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .priority.medium {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .priority.low {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      /* Done */
+      .card.done {
+        opacity: 0.7;
+      }
+
+      .card.done h4 {
+        text-decoration: line-through;
+      }
+
+      /* Dark mode tweaks for text */
+      html.dark body,
+      html.dark .card h4,
+      html.dark .page-header h1,
+      html.dark .page-header p,
+      html.dark nav a {
+        color: var(--text-main);
+      }
+
+      html.dark .priority.high {
+        background: #b91c1c20; /* slightly transparent on dark */
+        color: #fca5a5;
+      }
+
+      html.dark .priority.medium {
+        background: #1d4ed820;
+        color: #93c5fd;
+      }
+
+      html.dark .priority.low {
+        background: #64748b20;
+        color: #cbd5e1;
+      }
+
+      html.dark nav a.active {
+        color: var(--primary);
+      }
+      /* Colored circles behind column counters */
+      .column-header span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      /* Specific colors for each column */
+      .column:nth-child(1) .column-header span {
+        /* TO DO */
+        background: #e2e8f0;
+      }
+
+      .column:nth-child(2) .column-header span {
+        /* STARTED */
+        background: #fef3c7;
+      }
+
+      .column:nth-child(3) .column-header span {
+        /* IN PROGRESS */
+        background: #137fec33;
+      }
+
+      .column:nth-child(4) .column-header span {
+        /* FINISHED */
+        background: #d1fae5;
+      }
+      .card.dragging {
+        opacity: 0.5;
+        transform: scale(1.02);
+        transition: transform 0.2s;
+      }
+
+      .column {
+        transition: background 0.2s;
+      }
+
+      .column.dragover {
+        background: rgba(30, 111, 217, 0.1); /* subtle highlight */
+      }
+      .mobile-nav {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .kanban {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .column {
+          width: 100% !important;
+          min-width: auto !important;
+        }
+
+        /* Optional: make cards slightly smaller for mobile */
+        .task-card {
+          padding: 10px;
+        }
+
+        /* Stack subtasks vertically if needed */
+        .subtasks ul {
+          flex-direction: column;
+        }
+
+        /* Ensure the column headers remain readable */
+        .column-header {
+          font-size: 0.75rem;
+        }
+        nav {
+          position: fixed;
+          bottom: 0;
+          top: auto;
+          width: 100%;
+          padding: 8px 6px;
+          display: flex;
+          justify-content: space-around;
+          background: #020617;
+          border-top: 1px solid var(--border-subtle);
+          z-index: 100;
+        }
+
+        nav a {
+          flex: 1;
+          text-align: center;
+          font-size: 12px;
+          padding: 6px 0;
+          color: var(--text-secondary);
+        }
+
+        nav a.active {
+          color: var(--text-primary);
+        }
+        .mobile-nav {
+          display: flex;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+
+          background: #020617;
+          border-top: 1px solid var(--border-subtle);
+          padding: 8px 0;
+
+          justify-content: space-around;
+          z-index: 100;
+        }
+
+        .mobile-nav a {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+
+          color: var(--text-secondary);
+          text-decoration: none;
+          font-size: 11px;
+        }
+
+        .mobile-nav span {
+          font-size: 22px;
+        }
+
+        .mobile-nav a:hover {
+          color: var(--text-primary);
+        }
+
+        /* Make room for bottom nav */
+        main {
+          padding-bottom: 72px;
+        }
+      }
+    </style>
   </head>
 
   <header>
