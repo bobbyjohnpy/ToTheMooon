@@ -50,6 +50,7 @@ export function loadTasks(userId) {
   });
 }
 let activeTaskId = null;
+let openCard = null;
 
 // ---------------------
 // Add Task
@@ -98,40 +99,56 @@ export async function toggleSubtask(uid, taskId, index, current) {
 // ---------------------
 export function renderTask(uid, taskId, task) {
   const card = document.createElement("div");
-  card.className = "task-card";
-  card.draggable = true;
+  card.className = `task-card priority-${task.urgency}`;
   card.dataset.id = taskId;
+  card.draggable = true;
 
   card.innerHTML = `
-    <div class="task-main">
+    <div class="task-header">
       <div class="task-title">${task.title}</div>
-      <div class="task-meta">
-        <span class="priority ${task.priority}">${task.priority}</span>
-        <span class="created">${new Date(
-          task.createdAt?.seconds * 1000
-        ).toLocaleDateString()}</span>
-      </div>
+      <div class="priority-box ${task.urgency}"></div>
+    </div>
 
-      <div class="progress">
-        <div class="progress-bar" style="width:${calcProgress(task)}%"></div>
-      </div>
+    <div class="progress">
+      <div class="progress-bar" style="width:${calcProgress(task)}%"></div>
     </div>
 
     <div class="task-details hidden">
       <div class="subtasks"></div>
-      <button class="add-subtask">+ Add Subtask</button>
+      <button class="add-subtask-btn">+ Add subtask</button>
+    </div>
+
+    <div class="task-meta">
+      Created ${new Date(task.createdAt).toLocaleString()}
     </div>
   `;
+  const details = card.querySelector(".task-details");
 
-  // Expand on click
-  card.querySelector(".task-main").addEventListener("click", () => {
-    card.querySelector(".task-details").classList.toggle("hidden");
+  card.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    // Close previously open card
+    if (openCard && openCard !== details) {
+      openCard.classList.add("hidden");
+    }
+
+    // Toggle this one
+    const isOpen = !details.classList.contains("hidden");
+    details.classList.toggle("hidden", isOpen);
+
+    openCard = details.classList.contains("hidden") ? null : details;
+
     renderSubtasks(card, task);
   });
+  card.addEventListener("dragstart", () => {
+    card.classList.add("dragging");
+  });
 
-  enableDrag(card);
-  return card;
+  card.addEventListener("dragend", () => {
+    card.classList.remove("dragging");
+  });
 }
+
 function calcProgress(task) {
   if (!task.subtasks?.length) return 0;
   const done = task.subtasks.filter((s) => s.completed).length;
@@ -295,3 +312,9 @@ function closeModal() {
   document.getElementById("taskModal").classList.add("hidden");
   activeTaskId = null;
 }
+document.addEventListener("click", () => {
+  if (openCard) {
+    openCard.classList.add("hidden");
+    openCard = null;
+  }
+});
