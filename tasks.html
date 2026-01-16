@@ -487,22 +487,23 @@
       </button>
     </div>
   </header>
-  <div id="authPanel" style="display: none; margin-bottom: 16px">
-    <div class="card">
-      <small class="small">Account</small>
 
-      <input id="authEmail" type="email" placeholder="Email" />
-      <input id="authPassword" type="password" placeholder="Password" />
+  <main>
+    <div id="authPanel" style="display: none; margin-bottom: 16px">
+      <div class="card">
+        <small class="small">Account</small>
 
-      <div style="display: flex; gap: 12px; margin-top: 8px">
-        <span onclick="linkAccount()" style="cursor: pointer"
-          >Create Account</span
-        >
-        <span onclick="signIn()" style="cursor: pointer">Sign In</span>
+        <input id="authEmail" type="email" placeholder="Email" />
+        <input id="authPassword" type="password" placeholder="Password" />
+
+        <div style="display: flex; gap: 12px; margin-top: 8px">
+          <span onclick="linkAccount()" style="cursor: pointer"
+            >Create Account</span
+          >
+          <span onclick="signIn()" style="cursor: pointer">Sign In</span>
+        </div>
       </div>
     </div>
-  </div>
-  <main>
     <div class="page-header">
       <div>
         <h1>Project Kanban Board</h1>
@@ -565,7 +566,7 @@
   </nav>
   <body>
     <script type="module">
-      injectNav("tasks");
+      // injectNav("tasks");
 
       import { initAuthGate } from "./js/auth-gate.js";
       import { logout } from "./js/auth.js";
