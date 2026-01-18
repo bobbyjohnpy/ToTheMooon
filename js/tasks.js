@@ -121,11 +121,12 @@ export function renderTask(uid, taskId, task) {
     <div class="task-details hidden">
       <div class="subtasks"></div>
       <button class="add-subtask-btn">+ Add subtask</button>
-    </div>
-  
+        
     <div class="task-meta">
       Created ${new Date(task.createdAt).toLocaleString()}
     </div>
+    </div>
+
          <div class="priority ${
            task.urgency
          }">${task.urgency.toUpperCase()}</div>
