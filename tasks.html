@@ -399,6 +399,9 @@
   justify-content: flex-end;
   gap: 12px;
 }
+.hidden{
+  display: none;
+}
 
       @media (max-width: 768px) {
         .kanban {
@@ -654,15 +657,25 @@
         addSubtask,
         toggleSubtask,
       } from "./js/tasks.js";
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").then(() => {
+        console.log("Service Worker registered successfully");
+      });
+    });
+  }
 
+  // PWA Install Prompt
+  let deferredPrompt;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log("PWA install prompt available");
+  });
    
     </script>
     <script type="module" src="./js/auth-ui.js"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js");
-      }
-    </script>
+
     <script>
   const cards = document.querySelectorAll(".task-card");
 
