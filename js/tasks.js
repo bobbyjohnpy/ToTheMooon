@@ -183,7 +183,7 @@ function renderSubtasks(card, task) {
     container.appendChild(row);
   });
 
-  card.querySelector(".add-subtask").onclick = async () => {
+  card.querySelector(".add-subtask-btn").onclick = async () => {
     const text = prompt("Subtask name");
     if (!text) return;
 
@@ -207,7 +207,7 @@ function enableDrag(card) {
   });
 }
 
-document.querySelectorAll(".column-body").forEach((col) => {
+document.querySelectorAll(".column").forEach((col) => {
   col.addEventListener("dragover", (e) => {
     e.preventDefault();
     const card = document.querySelector(".dragging");
