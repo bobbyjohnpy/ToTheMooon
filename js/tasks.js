@@ -35,6 +35,7 @@ export function loadTasks(userId) {
 
     snapshot.forEach((docSnap) => {
       const task = docSnap.data();
+      console.log("task", task);
       const status = task.status || "todo";
 
       const container = document.getElementById(
@@ -122,9 +123,10 @@ export function renderTask(uid, taskId, task) {
       <div class="subtasks"></div>
       <button class="add-subtask-btn">+ Add subtask</button>
         
-    <div class="task-meta">
-      Created ${new Date(task.createdAt).toLocaleString()}
-    </div>
+<div class="task-meta">
+  Created ${task.createdAt ? task.createdAt.toDate().toLocaleString() : "—"}
+</div>
+
     </div>
 
          <div class="priority ${
@@ -207,7 +209,7 @@ function enableDrag(card) {
   });
 }
 
-document.querySelectorAll(".column").forEach((col) => {
+document.querySelectorAll(".column-body").forEach((col) => {
   col.addEventListener("dragover", (e) => {
     e.preventDefault();
     const card = document.querySelector(".dragging");
@@ -218,7 +220,7 @@ document.querySelectorAll(".column").forEach((col) => {
   col.addEventListener("drop", async () => {
     const card = document.querySelector(".dragging");
     if (!card) return;
-
+    console.log("Dropped in column:", col.id);
     const newStatus = col.id;
     await updateDoc(doc(db, "users", uid, "tasks", card.dataset.id), {
       status: newStatus,
@@ -270,25 +272,18 @@ function openTaskModal(task = null, id = null) {
 }
 document.getElementById("saveTaskBtn").addEventListener("click", async () => {
   const title = document.getElementById("taskTitleInput").value.trim();
-  const urgency = document.getElementById("taskPriorityInput").value;
 
   if (!title) return alert("Task needs a title");
-  document.getElementById("saveTaskBtn").onclick = async () => {
-    const title = document.getElementById("taskTitleInput").value.trim();
-    const priority = document.getElementById("taskPriorityInput").value;
 
-    if (!title) return alert("Task needs a title");
+  const priority = document.getElementById("taskPriorityInput").value;
 
-    await addDoc(collection(db, "users", uid, "tasks"), {
-      title,
-      priority,
-      status: "todo",
-      subtasks: [],
-      createdAt: Timestamp.now(),
-    });
-
-    closeModal();
-  };
+  await addDoc(collection(db, "users", uid, "tasks"), {
+    title,
+    urgency: priority,
+    status: "todo",
+    subtasks: [],
+    createdAt: Timestamp.now(),
+  });
 
   closeModal();
 });

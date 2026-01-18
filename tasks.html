@@ -35,7 +35,7 @@
         --text-muted: #94a3b8; /* muted text in dark mode */
         --border: #3f4c5a; /* subtle dark border */
         --shadow: 0 6px 18px rgba(0, 0, 0, 0.6); /* stronger shadow for dark */
-      }
+        --primary: #0EA5E9; /* lighter blue for dark mode */}
 
       /* Reset */
       * {
@@ -231,7 +231,11 @@
       html.dark .progress {
         background: #3f4c5a;
       }
-
+      html.dark .progress-bar{
+           display: block;
+        height: 100%;
+        background: var(--primary);
+      }
       .progress-bar {
         display: block;
         height: 100%;
@@ -356,6 +360,9 @@
       .column.dragover {
         background: rgba(30, 111, 217, 0.1); /* subtle highlight */
       }
+      .column-body {
+        min-height: 100%;
+      }
       .mobile-nav {
         display: none;
       }
@@ -402,7 +409,18 @@
 .hidden{
   display: none;
 }
-
+.add-subtask-btn{
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.subtask-row{
+  margin-bottom: 6px;
+}
       @media (max-width: 768px) {
         .kanban {
           display: flex;
