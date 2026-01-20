@@ -6,7 +6,7 @@ export function initAuthGate(loadFn) {
   initAuth((user) => {
     // Detach old Firestore listener
     if (unsubscribe) unsubscribe();
-
+    console.log("entered authgatefunc");
     // Attach new one
     unsubscribe = loadFn(user.uid);
   });

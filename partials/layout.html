@@ -1,0 +1,59 @@
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 48 48"><path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" /></svg>
+    TaskMaster
+  </div>
+  <nav>
+    <a class="active">Dashboard</a> <a>Tasks</a> <a>Calendar</a> <a>Settings</a>
+  </nav>
+  <div class="nav-right">
+    <input type="search" placeholder="Search tasks..." />
+    <span class="material-symbols-outlined">notifications</span>
+    <button id="logoutBtn" class="hidden">
+      <span class="material-symbols-outlined">logout</span>
+    </button>
+    <button id="signInButton" class="hidden">
+      <span class="material-symbols-outlined">account_circle</span>
+    </button>
+    <!-- Dark mode toggle button -->
+    <button id="darkModeToggle" class="material-symbols-outlined">
+      dark_mode
+    </button>
+  </div>
+</header>
+<div id="authPanel" class="auth-backdrop hidden">
+  <div class="auth-modal">
+    <button class="auth-close" id="authCloseBtn">×</button>
+    <div class="auth-header"><div class="auth-logo">PROJECT_FLOW</div></div>
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="signInTab">SIGN IN</button>
+      <button class="auth-tab" id="createTab">CREATE ACCOUNT</button>
+    </div>
+    <!-- Form -->
+    <div class="auth-body">
+      <label>Email Address</label>
+      <input id="authEmail" type="email" placeholder="name@company.com" />
+      <div class="password-row">
+        <label>Password</label> <a href="#" class="forgot">Forgot?</a>
+      </div>
+      <input id="authPassword" type="password" />
+      <button id="signInButtonModal" class="primary-btn">SIGN IN</button>
+      <p class="auth-footer">
+        Secure access for project members.<br />
+        All data encrypted.
+      </p>
+    </div>
+  </div>
+</div>
+<div id="logoutPanel" class="auth-backdrop hidden">
+  <div class="auth-modal">
+    <button id="logoutCloseBtn" class="auth-close">×</button>
+    <h3 class="logout-title">Sign out</h3>
+    <p class="logout-text">Are you sure you want to log out?</p>
+    <div class="logout-actions">
+      <button id="cancelLogoutBtn" class="modal-logout-cancel">Cancel</button>
+      <button id="confirmLogoutBtn" class="modal-logout">Log out</button>
+    </div>
+  </div>
+</div>

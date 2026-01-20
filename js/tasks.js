@@ -12,11 +12,19 @@ import {
   arrayUnion,
   Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initAuth, logout } from "./auth.js";
 
 let uid = null;
 let unsubscribeTasks = null;
 let openTaskId = null;
 let activeTaskId = null;
+let taskToDeleteId = null;
+let F = null;
+let pendingDoneColumnId = null;
+let dragSourceColumnId = null;
+let pendingDoneCard;
+let pendingDoneTaskId;
+let selectedPriority = "low";
 
 /* ---------------------
    LOCAL TASK STORE
@@ -34,14 +42,13 @@ export function loadTasks(userId) {
 
   const q = query(
     collection(db, "users", uid, "tasks"),
-    orderBy("createdAt", "desc")
+    orderBy("createdAt", "desc"),
   );
 
   unsubscribeTasks = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
       const taskId = change.doc.id;
       const task = change.doc.data();
-      console.log("Task change:", change.type, taskId, task);
 
       if (change.type === "removed") {
         taskStore.delete(taskId);
@@ -51,13 +58,12 @@ export function loadTasks(userId) {
 
       const prev = taskStore.get(taskId);
       let prevpic = prevSnapshot;
-      console.log("Previous task data:", prev);
+
       taskStore.set(taskId, task);
-      console.log(taskStore);
 
       const status = task.status || "todo";
       const container = document.getElementById(
-        status === "progress" ? "inprogress" : status
+        status === "progress" ? "inprogress" : status,
       );
 
       const existing = document.querySelector(`.card[data-id="${taskId}"]`);
@@ -85,8 +91,15 @@ function renderTask(taskId, task) {
   card.className = `card priority-${task.urgency || "medium"}`;
   card.dataset.id = taskId;
   card.draggable = true;
+  card.tabIndex = 0;
+  card.tabIndex = 0;
+
+  card.addEventListener("focusin", () => {
+    card.focus();
+  });
 
   card.innerHTML = `
+  
     <div class="task-meta hidden">
       <p class="created-at">
         Created ${task.createdAt?.toDate().toLocaleString() || "—"}
@@ -112,12 +125,45 @@ function renderTask(taskId, task) {
       <button class="add-subtask-btn"> <span class = "material-symbols-outlined">add</span>add subtask</button>
 
     </div>
+    
+  </div>
     <div class="priority-div">
+     <button class="delete-task-btn" aria-label="Delete task">
+      <span class="material-symbols-outlined">delete</span>
+      Delete Task
+    </button>
     <div class="priority ${task.urgency || "medium"}">
       ${(task.urgency || "medium").toUpperCase()}
     </div>
     </div>
   `;
+  const priorityEl = card.querySelector(".priority");
+  if (task.status === "done") {
+    priorityEl.className = "priority done";
+    priorityEl.textContent = "DONE";
+  }
+  priorityEl.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    // 🔑 Always read latest data
+    const currentTask = taskStore.get(taskId);
+    if (!currentTask) return;
+
+    const current = currentTask.urgency || "medium";
+    const next = getNextPriority(current);
+
+    await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+      urgency: next,
+    });
+  });
+
+  const deleteBtn = card.querySelector(".delete-task-btn");
+
+  deleteBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // don’t toggle card
+
+    openDeleteTaskModal(taskId);
+  });
 
   const details = card.querySelector(".task-details");
   const meta = card.querySelector(".task-meta");
@@ -143,6 +189,12 @@ function renderTask(taskId, task) {
 
   return card;
 }
+const PRIORITY_ORDER = ["low", "medium", "high"];
+
+function getNextPriority(current) {
+  const idx = PRIORITY_ORDER.indexOf(current);
+  return PRIORITY_ORDER[(idx + 1) % PRIORITY_ORDER.length];
+}
 
 /* ---------------------
    UPDATE CARD UI
@@ -160,22 +212,28 @@ function updateCardUI(card, task, prev, prevSnapshot) {
   }
   bar.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
   metaCount.textContent = `${done}/${total}`;
-  console.log("Updating card UI for task:", task);
+
+  const priorityEl = card.querySelector(".priority");
+
+  if (priorityEl && prev?.urgency !== task.urgency) {
+    priorityEl.className = `priority ${task.urgency || "medium"}`;
+    priorityEl.textContent = (task.urgency || "medium").toUpperCase();
+  }
+  if (task.status === "done") {
+    priorityEl.className = "priority done";
+    priorityEl.textContent = "DONE";
+  }
+
   if (openTaskId === card.dataset.id) {
-    console.log("Card is open, checking subtasks for changes.");
-    console.log(prev);
-    console.log(prevSnapshot);
     if (
       prevSnapshot &&
       JSON.stringify(prevSnapshot.subtasks) !== JSON.stringify(task.subtasks)
     ) {
-      console.log("Firestore confirmed update", task.subtasks);
     }
     if (
       prev &&
       JSON.stringify(prev.subtasks) !== JSON.stringify(task.subtasks)
     ) {
-      console.log("Firestore confirmed update:", task.subtasks);
     }
     renderSubtasks(card);
   }
@@ -193,15 +251,60 @@ function renderSubtasks(card) {
   container.innerHTML = "";
 
   task.subtasks?.forEach((s) => {
+    const date = s.createdAt.toDate();
+
+    const formatted = s.createdAt.toDate().toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    // Oct 24, 2024, 11:24 AM
+
     const row = document.createElement("div");
     row.className = "subtask-row";
 
     row.innerHTML = `
+    <div class = "checkbox-date-div">
+    <div class = "checkbox-div">
       <input type="checkbox" ${s.completed ? "checked" : ""} />
       <span>${s.text}</span>
+      </div>
+      <div class = "date-div">
+      <span>${formatted}</span>
+      </div>
+      </div>
+      <div class ="delete-div">
+  <button class= "subtask-delete-btn" aria-label="Delete subtask">
+    <span class="material-symbols-outlined">close</span>
+  </button>
+      </div>
     `;
 
-    const checkbox = row.querySelector("input");
+    const checkboxdateDiv = row.querySelector(".checkbox-date-div");
+    const checkboxDiv = checkboxdateDiv.querySelector(".checkbox-div");
+    const checkbox = checkboxDiv.querySelector("input");
+    const deleteBtn = row.querySelector(".subtask-delete-btn");
+
+    deleteBtn.onclick = async (e) => {
+      e.stopPropagation();
+
+      // snapshot BEFORE mutation (for UI diffing)
+      prevSnapshot = JSON.parse(JSON.stringify(taskStore.get(taskId)));
+
+      // filter out this subtask
+      const updatedSubtasks = task.subtasks.filter(
+        (st) =>
+          !(st.text === s.text && st.createdAt.seconds === s.createdAt.seconds),
+      );
+
+      await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+        subtasks: updatedSubtasks,
+      });
+    };
+
     checkbox.onclick = (e) => e.stopPropagation();
     prevSnapshot = JSON.parse(JSON.stringify(taskStore.get(taskId)));
     checkbox.onchange = async () => {
@@ -225,16 +328,48 @@ function setupAddSubtask(card, taskId) {
   btn.onclick = (e) => {
     e.stopPropagation();
 
+    if (details.querySelector(".new-subtask-wrapper")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "new-subtask-wrapper";
+
     const input = document.createElement("input");
     input.className = "new-subtask-input";
     input.placeholder = "New subtask…";
 
-    details.insertBefore(input, btn);
+    const addBtn = document.createElement("button");
+    addBtn.className = "subtask-add-btn";
+
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-outlined";
+    icon.textContent = "check";
+
+    const text = document.createElement("span");
+
+    addBtn.append(icon, text);
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "subtask-cancel-btn";
+
+    const cancelIcon = document.createElement("span");
+    cancelIcon.className = "material-symbols-outlined";
+    cancelIcon.textContent = "close";
+
+    const cancelText = document.createElement("span");
+
+    cancelBtn.append(cancelIcon, cancelText);
+
+    // 🔥 STOP CARD FROM INTERCEPTING EVENTS
+    ["mousedown", "pointerdown", "click", "focusin"].forEach((evt) => {
+      wrapper.addEventListener(evt, (e) => e.stopPropagation());
+      input.addEventListener(evt, (e) => e.stopPropagation());
+    });
+
+    wrapper.append(input, addBtn, cancelBtn);
+    details.insertBefore(wrapper, btn);
     input.focus();
 
-    input.onkeydown = async (e) => {
-      if (e.key !== "Enter") return;
-
+    const submit = async () => {
       const text = input.value.trim();
       if (!text) return;
 
@@ -246,7 +381,18 @@ function setupAddSubtask(card, taskId) {
         }),
       });
 
-      input.remove();
+      wrapper.remove();
+    };
+
+    addBtn.onclick = submit;
+
+    cancelBtn.onclick = () => {
+      wrapper.remove();
+    };
+
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") submit();
+      if (e.key === "Escape") wrapper.remove();
     };
   };
 }
@@ -257,6 +403,7 @@ function setupAddSubtask(card, taskId) {
 function enableDrag(card) {
   card.addEventListener("dragstart", () => {
     card.classList.add("dragging");
+    dragSourceColumnId = card.parentElement.id;
   });
 
   card.addEventListener("dragend", () => {
@@ -275,7 +422,32 @@ document.querySelectorAll(".column-body").forEach((col) => {
     const card = document.querySelector(".dragging");
     if (!card) return;
 
-    await updateDoc(doc(db, "users", uid, "tasks", card.dataset.id), {
+    const taskId = card.dataset.id;
+    const task = taskStore.get(taskId);
+    if (!task) return;
+
+    const total = task.subtasks?.length || 0;
+    const done = task.subtasks?.filter((s) => s.completed).length || 0;
+
+    // ⚠️ Dropped into Done but incomplete
+    if (col.id === "done" && total !== done) {
+      // shake for feedback
+      card.classList.add("shake");
+      setTimeout(() => card.classList.remove("shake"), 400);
+
+      // store pending intent
+      pendingDoneCard = card;
+      pendingDoneTaskId = taskId;
+
+      // open modal
+      openIncompleteDoneModal(task, done, total);
+
+      // ❗ DO NOT update Firestore yet
+      return;
+    }
+
+    // ✅ normal allowed drop
+    await updateDoc(doc(db, "users", uid, "tasks", taskId), {
       status: col.id,
     });
   });
@@ -292,18 +464,20 @@ function openTaskModal() {
   activeTaskId = null;
   document.getElementById("taskModal").classList.remove("hidden");
   document.getElementById("taskTitleInput").value = "";
-  document.getElementById("taskPriorityInput").value = "medium";
 }
 
 document.getElementById("saveTaskBtn")?.addEventListener("click", async () => {
-  const title = document.getElementById("taskTitleInput").value.trim();
+  const titleInput = document.getElementById("taskTitleInput");
+
+  const title = titleInput?.value.trim();
   if (!title) return alert("Task needs a title");
 
-  const urgency = document.getElementById("taskPriorityInput").value;
+  const urgency = selectedPriority;
 
   await addDoc(collection(db, "users", uid, "tasks"), {
     title,
     urgency,
+    selectedPriority,
     status: "todo",
     subtasks: [],
     createdAt: Timestamp.now(),
@@ -346,3 +520,133 @@ function toggleDarkMode() {
 document
   .getElementById("darkModeToggle")
   .addEventListener("click", toggleDarkMode);
+function openDeleteTaskModal(taskId) {
+  taskToDeleteId = taskId;
+  document.getElementById("deleteTaskModal").classList.remove("hidden");
+}
+
+function closeDeleteTaskModal() {
+  taskToDeleteId = null;
+  document.getElementById("deleteTaskModal").classList.add("hidden");
+}
+document
+  .getElementById("confirmDeleteTaskBtn")
+  ?.addEventListener("click", async () => {
+    if (!taskToDeleteId) return;
+
+    try {
+      await deleteDoc(doc(db, "users", uid, "tasks", taskToDeleteId));
+      // Firestore snapshot will remove the card
+    } catch (err) {
+      console.error("Failed to delete task", err);
+    } finally {
+      closeDeleteTaskModal();
+    }
+  });
+
+document
+  .getElementById("cancelDeleteTaskBtn")
+  ?.addEventListener("click", closeDeleteTaskModal);
+document.getElementById("deleteTaskModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "deleteTaskModal") {
+    closeDeleteTaskModal();
+  }
+});
+
+function openIncompleteDoneModal(task, done, total) {
+  const text = document.getElementById("incompleteDoneText");
+
+  text.textContent = `This task still has ${
+    total - done
+  } unfinished subtask${total - done > 1 ? "s" : ""}.
+You can mark it as done anyway, but unfinished work will remain.`;
+
+  document.getElementById("incompleteDoneModal").classList.remove("hidden");
+}
+
+function closeIncompleteDoneModal() {
+  pendingDoneTaskId = null;
+  pendingDoneColumnId = null;
+  document.getElementById("incompleteDoneModal").classList.add("hidden");
+}
+document
+  .getElementById("cancelIncompleteDoneBtn")
+  ?.addEventListener("click", () => {
+    if (pendingDoneCard && dragSourceColumnId) {
+      slideCardBack(pendingDoneCard, dragSourceColumnId);
+    }
+
+    pendingDoneCard = null;
+    pendingDoneTaskId = null;
+
+    closeIncompleteDoneModal();
+  });
+
+document
+  .getElementById("confirmIncompleteDoneBtn")
+  ?.addEventListener("click", async () => {
+    if (!pendingDoneTaskId) return;
+
+    try {
+      await updateDoc(doc(db, "users", uid, "tasks", pendingDoneTaskId), {
+        status: "done",
+      });
+    } catch (err) {
+      console.error("Failed to mark done", err);
+    } finally {
+      pendingDoneCard = null;
+      pendingDoneTaskId = null;
+      closeIncompleteDoneModal();
+    }
+  });
+
+document
+  .querySelector("#incompleteDoneModal .delete-modal-backdrop")
+  ?.addEventListener("click", closeIncompleteDoneModal);
+function slideCardBack(card, sourceColumnId) {
+  const sourceCol = document.getElementById(sourceColumnId);
+  if (!sourceCol) return;
+
+  // measure current position
+  const from = card.getBoundingClientRect();
+
+  // move card back instantly (no animation)
+  sourceCol.appendChild(card);
+
+  const to = card.getBoundingClientRect();
+
+  // invert
+  const dx = from.left - to.left;
+  const dy = from.top - to.top;
+
+  card.style.transition = "none";
+  card.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  // animate
+  requestAnimationFrame(() => {
+    card.style.transition = "transform 220ms ease";
+    card.style.transform = "translate(0, 0)";
+  });
+
+  // cleanup
+  card.addEventListener(
+    "transitionend",
+    () => {
+      card.style.transition = "";
+      card.style.transform = "";
+    },
+    { once: true },
+  );
+}
+
+document.querySelectorAll(".priority-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".priority-btn")
+      .forEach((b) => b.classList.remove("active"));
+
+    btn.classList.add("active");
+    selectedPriority = btn.dataset.priority;
+    console.log("selected priority", selectedPriority);
+  });
+});

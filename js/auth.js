@@ -27,17 +27,24 @@ export function initAuth(onReady) {
     currentUID = user.uid;
 
     const authPanel = document.getElementById("authPanel");
+    const signInButton = document.getElementById("signInButton");
+    const logoutBtn = document.getElementById("logoutBtn");
+    console.log("in auth.js");
+    if (signInButton) {
+      signInButton.classList.toggle("hidden", !user.isAnonymous);
+      console.log("in sign in");
+    }
+
+    if (logoutBtn) {
+      logoutBtn.classList.toggle("hidden", user.isAnonymous);
+      console.log("in hide log out");
+    }
+
     if (authPanel) {
-      authPanel.style.display = user.isAnonymous ? "flex" : "none";
+      authPanel.classList.add("hidden"); // always close on auth change
     }
 
     readyCallbacks.forEach((cb) => cb(user));
-
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    if (logoutBtn) {
-      logoutBtn.style.display = user.isAnonymous ? "none" : "inline-block";
-    }
   });
 }
 

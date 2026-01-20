@@ -1,25 +1,20 @@
-export function injectNav(active) {
-  document.body.insertAdjacentHTML(
-    "afterbegin",
-    `
-    <nav>
-      <a href="index.html" class="${
-        active === "dashboard" ? "active" : ""
-      }">Dashboard</a>
-      <a href="track.html" class="${
-        active === "track" ? "active" : ""
-      }">Track</a>
-      <a href="tasks.html" class="${
-        active === "tasks" ? "active" : ""
-      }">Tasks</a>
-      <a href="notes.html" class="${
-        active === "notes" ? "active" : ""
-      }">Notes</a>
-      <a href="progress.html" class="${
-        active === "progress" ? "active" : ""
-      }">Progress</a>
-      <button id="logoutBtn" onclick="logout()" style="display:none;">Log out</button>
-    </nav>
-    `
-  );
+export function initNav() {
+  const links = document.querySelectorAll("header nav a");
+
+  const page =
+    location.pathname.split("/").pop().replace(".html", "") || "index";
+
+  links.forEach((link) => {
+    const target = link.textContent.toLowerCase();
+
+    if (target === page) {
+      link.classList.add("active");
+    } else {
+      link.classList.remove("active");
+    }
+
+    link.addEventListener("click", () => {
+      location.href = `/${target}.html`;
+    });
+  });
 }

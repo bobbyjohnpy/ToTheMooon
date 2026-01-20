@@ -13,7 +13,7 @@ const FILES_TO_CACHE = [
 // Install SW and cache files
 self.addEventListener("install", (evt) => {
   evt.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE)),
   );
   self.skipWaiting();
 });
@@ -25,9 +25,9 @@ self.addEventListener("activate", (evt) => {
       Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) return caches.delete(key);
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
   self.clients.claim();
 });
@@ -45,6 +45,6 @@ self.addEventListener("fetch", (evt) => {
           .then((cache) => cache.put(evt.request, respClone));
         return resp;
       })
-      .catch(() => caches.match(evt.request))
+      .catch(() => caches.match(evt.request)),
   );
 });
