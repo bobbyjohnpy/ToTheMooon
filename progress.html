@@ -4,184 +4,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Founder OS</title>
+    <title>Founder OS – Progress</title>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
 
-    <style>
-      body {
-        margin: 0;
-        font-family: system-ui, sans-serif;
-        background: #0f172a;
-        color: #e5e7eb;
-      }
+    <!-- Global styles -->
+    <link rel="stylesheet" href="./css/app.css" />
 
-      nav {
-        display: flex;
-        justify-content: space-around;
-        padding: 12px;
-        background: #020617;
-        position: sticky;
-        top: 0;
-      }
-
-      nav a {
-        color: #e5e7eb;
-        text-decoration: none;
-        font-size: 14px;
-      }
-
-      main {
-        padding: 20px;
-      }
-      .card,
-      .intro-card {
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 16px;
-      }
-      .intro-card {
-        background: #02101f;
-      }
-      #app {
-        width: 100%;
-      }
-      .page-wrapper {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-      }
-      main {
-        width: 80%;
-        padding: 16px;
-        max-width: 720px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-      }
-
-      h1 {
-        margin-top: 0;
-        font-size: 20px;
-        font-weight: 600;
-      }
-
-      /* ───────── Inputs (Add Task Area) ───────── */
-
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 10px 0px;
-        margin-top: 6px;
-        border-radius: 8px;
-        border: none;
-        font-size: 14px;
-        background: #020617;
-        color: var(--text-primary);
-      }
-
-      textarea {
-        resize: vertical;
-      }
-
-      button {
-        margin-top: 8px;
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-      #authPanel {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-      }
-      @media (max-width: 600px) {
-        main {
-          padding: 12px;
-          width: 85%;
-          margin: 0;
-        }
-
-        h1 {
-          font-size: 18px;
-        }
-
-        /* Inputs feel lighter */
-        input,
-        select,
-        textarea {
-          padding: 10px 0px;
-          font-size: 13px;
-        }
-
-        textarea {
-          min-height: 48px;
-        }
-
-        /* Nav readability */
-        nav a {
-          font-size: 13px;
-        }
-      }
-    </style>
+    <!-- Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
   </head>
-  <script>
-    function handleAuth() {
-      alert("Auth not wired yet");
-    }
-  </script>
 
   <body>
-    <div class="page-wrapper">
-      <div id="app">
-        <main>
-          <!-- rest of page content -->
+    <!-- Injected app shell -->
+    <div id="app-shell"></div>
 
-          <h1>Founder OS</h1>
-          <div id="authPanel" style="display: none; margin-bottom: 16px">
-            <div class="card">
-              <small class="small">Account</small>
-              <input id="authEmail" type="email" placeholder="Email" />
-              <input id="authPassword" type="password" placeholder="Password" />
+    <!-- Page content ONLY -->
+    <main>
+      <h1>Track</h1>
 
-              <div style="display: flex; gap: 12px; margin-top: 8px">
-                <span onclick="linkAccount()" style="cursor: pointer"
-                  >Create Account</span
-                >
-                <span onclick="signIn()" style="cursor: pointer">Sign In</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="intro-card">
-            <h3>Welcome</h3>
-            <p>This is your founder dashboard. More coming next.</p>
-          </div>
-        </main>
-      </div>
-    </div>
+      <section class="card">
+        <p>Tracking dashboard coming soon.</p>
+      </section>
+    </main>
+    <script type="module" src="./js/app-init.js"></script>
+    <!-- App bootstrap -->
     <script type="module">
-      import { injectNav } from "./js/nav.js";
-      injectNav("progress"); // replace "dashboard" with the current page: "tasks", "notes", etc.
-
+      import { initNav } from "./js/nav.js";
       import { initAuthGate } from "./js/auth-gate.js";
-      import { logout } from "./js/auth.js";
-      window.logout = logout;
+      import "./js/auth-ui.js";
 
-      import "./js/auth-ui.js"; // bring in linkAccount/signIn globally
-
-      initAuthGate((uid) => {
-        // For pages without page-specific content, do nothing
-        // For tasks.html, we call loadTasks(uid)
-      });
+      initNav("track");
     </script>
+
     <!-- Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {

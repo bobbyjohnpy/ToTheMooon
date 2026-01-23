@@ -1,13 +1,12 @@
-import { initAuth } from "./auth.js";
+import { onAuthReady } from "./auth.js";
 
-export function initAuthGate(loadFn) {
-  let unsubscribe = null;
+export function initAuthGate(onAuthed) {
+  let fired = false;
 
-  initAuth((user) => {
-    // Detach old Firestore listener
-    if (unsubscribe) unsubscribe();
-    console.log("entered authgatefunc");
-    // Attach new one
-    unsubscribe = loadFn(user.uid);
+  onAuthReady((user) => {
+    if (!user || fired) return;
+
+    fired = true;
+    onAuthed(user.uid);
   });
 }

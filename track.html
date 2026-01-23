@@ -9,7 +9,7 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
-
+    <script type="module" src="./js/app-init.js"></script>
     <!-- Global styles -->
     <link rel="stylesheet" href="./css/app.css" />
 
@@ -32,7 +32,7 @@
         <p>Tracking dashboard coming soon.</p>
       </section>
     </main>
-    <script type="module" src="./js/app-init.js"></script>
+
     <!-- App bootstrap -->
     <script type="module">
       import { initNav } from "./js/nav.js";
@@ -41,12 +41,7 @@
 
       initNav("track");
 
-      initAuthGate((uid) => {
-        if (!uid) return;
-
-        // Track page logic later
-        console.log("Track page authed:", uid);
-      });
+      import { loadTasks } from "./js/tasks.js";
     </script>
 
     <!-- Service Worker -->

@@ -47,6 +47,7 @@ export function loadTasks(userId) {
 
   unsubscribeTasks = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
+      console.log(change);
       const taskId = change.doc.id;
       const task = change.doc.data();
 
@@ -99,27 +100,41 @@ function renderTask(taskId, task) {
   });
 
   card.innerHTML = `
-  
+  <div class = "top-card-container">
     <div class="task-meta hidden">
       <p class="created-at">
         Created ${task.createdAt?.toDate().toLocaleString() || "—"}
       </p>
     </div>
+       <button class="card-toggle" aria-label="Toggle task">
+    <span class="material-symbols-outlined">expand_more</span></div>
+
 
     <div class="task-header">
       <h4>${task.title}</h4>
     </div>
 
     <div class="progress-meta">
-      <span>subtasks</span>
-      <span>${countDone(task)}/${task.subtasks?.length || 0}</span>
+      <span class="${task.subtasks.length ? "show" : "hide"}">subtasks</span>
+  <span class="${task.subtasks.length ? "show" : "hide"}">
+  subtasks ${countDone(task)}/${task.subtasks?.length || 0}
+</span>
+
     </div>
 
     <div class="progress">
-      <div class="progress-bar" style="width:${calcProgress(task)}%"></div>
+   <div
+  class="progress-bar"
+  style="width: ${task.status === "done" ? 100 : calcProgress(task)}%"
+></div>
+
     </div>
 
     <div class="task-details hidden">
+    <div class="task-notes">
+  <textarea class="task-notes-input" placeholder="Add a note...">${task.notes || ""}</textarea>
+</div>
+
       <div class="subtasks"></div>
   
       <button class="add-subtask-btn"> <span class = "material-symbols-outlined">add</span>add subtask</button>
@@ -165,23 +180,56 @@ function renderTask(taskId, task) {
     openDeleteTaskModal(taskId);
   });
 
+  // TASK NOTES
+  const notesWrapper = card.querySelector(".task-notes");
+  const notesInput = notesWrapper.querySelector(".task-notes-input");
+
+  // Stop card click from toggling when typing
+  ["click", "focusin", "mousedown"].forEach((evt) =>
+    notesInput.addEventListener(evt, (e) => e.stopPropagation()),
+  );
+
+  // Save note to Firestore on change
+  notesInput.addEventListener("change", async () => {
+    await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+      notes: notesInput.value,
+    });
+  });
+
   const details = card.querySelector(".task-details");
   const meta = card.querySelector(".task-meta");
+  const topDiv = card.querySelector(".top-card-container");
+  let subtasksRendered = false;
 
   card.addEventListener("click", () => {
     const open = !details.classList.contains("hidden");
 
     if (open && openTaskId === taskId) {
+      topDiv.style.justifyContent = "flex-end";
       details.classList.add("hidden");
       meta.classList.add("hidden");
+      card.classList.remove("open");
       openTaskId = null;
       return;
     }
 
     openTaskId = taskId;
+    topDiv.style.justifyContent = "space-between";
     details.classList.remove("hidden");
     meta.classList.remove("hidden");
-    renderSubtasks(card);
+    card.classList.add("open");
+
+    if (!subtasksRendered) {
+      renderSubtasks(card);
+      subtasksRendered = true;
+    }
+  });
+
+  const toggleBtn = card.querySelector(".card-toggle");
+
+  toggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    card.click();
   });
 
   setupAddSubtask(card, taskId);
@@ -212,7 +260,14 @@ function updateCardUI(card, task, prev, prevSnapshot) {
   }
   bar.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
   metaCount.textContent = `${done}/${total}`;
-
+  if (total === 0 && task.status === "done") {
+    // task.status = "done";
+    console.log("jell");
+    bar.classList.add("complete");
+    setTimeout(() => bar.classList.remove("complete"), 600);
+    bar.style.width = "100%";
+    metaCount.textContent = `1/1`;
+  }
   const priorityEl = card.querySelector(".priority");
 
   if (priorityEl && prev?.urgency !== task.urgency) {
@@ -223,7 +278,16 @@ function updateCardUI(card, task, prev, prevSnapshot) {
     priorityEl.className = "priority done";
     priorityEl.textContent = "DONE";
   }
-
+  const taskNotesInput = card.querySelector(".task-notes-input");
+  if (taskNotesInput) taskNotesInput.value = task.notes || "";
+  if (openTaskId === card.dataset.id) {
+    task.subtasks?.forEach((s, i) => {
+      const row = card.querySelectorAll(".subtask-row")[i];
+      if (!row) return;
+      const subNotesInput = row.querySelector(".subtask-notes-input");
+      if (subNotesInput) subNotesInput.value = s.notes || "";
+    });
+  }
   if (openTaskId === card.dataset.id) {
     if (
       prevSnapshot &&
@@ -271,8 +335,10 @@ function renderSubtasks(card) {
     <div class = "checkbox-div">
       <input type="checkbox" ${s.completed ? "checked" : ""} />
       <span>${s.text}</span>
-      </div>
+      <div class ="subtask-notes"> <textarea class="subtask-notes-input" placeholder="Add a note...">${s.notes || ""}</textarea></div>
       <div class = "date-div">
+      </div>
+      
       <span>${formatted}</span>
       </div>
       </div>
@@ -286,6 +352,25 @@ function renderSubtasks(card) {
     const checkboxdateDiv = row.querySelector(".checkbox-date-div");
     const checkboxDiv = checkboxdateDiv.querySelector(".checkbox-div");
     const checkbox = checkboxDiv.querySelector("input");
+    const subtaskNotesWrapper = checkboxDiv.querySelector(".subtask-notes");
+    console.log(subtaskNotesWrapper);
+    const subNotesInput = subtaskNotesWrapper.querySelector(
+      ".subtask-notes-input",
+    );
+
+    // Stop row click from closing card
+    ["click", "focusin", "mousedown"].forEach((evt) =>
+      subNotesInput.addEventListener(evt, (e) => e.stopPropagation()),
+    );
+
+    // Save note to Firestore
+    subNotesInput.addEventListener("change", async () => {
+      s.notes = subNotesInput.value; // update local object
+      await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+        subtasks: task.subtasks,
+      });
+      console.log("J");
+    });
     const deleteBtn = row.querySelector(".subtask-delete-btn");
 
     deleteBtn.onclick = async (e) => {
@@ -514,12 +599,7 @@ function calcProgress(task) {
   if (!task.subtasks?.length) return 0;
   return Math.round((countDone(task) / task.subtasks.length) * 100);
 }
-function toggleDarkMode() {
-  document.documentElement.classList.toggle("dark");
-}
-document
-  .getElementById("darkModeToggle")
-  .addEventListener("click", toggleDarkMode);
+
 function openDeleteTaskModal(taskId) {
   taskToDeleteId = taskId;
   document.getElementById("deleteTaskModal").classList.remove("hidden");

@@ -74,3 +74,10 @@ export async function logout() {
   await signOut(auth);
   location.reload(); // clean reset
 }
+export function onAuthReady(cb) {
+  readyCallbacks.push(cb);
+
+  if (currentUser) {
+    cb(currentUser);
+  }
+}

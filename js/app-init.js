@@ -7,5 +7,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadLayout(); // inject HTML FIRST
   initNav(); // wire navbar
   initAuthUI(); // wire modals
-  initAuth(); // firebase auth
+  initAuth();
 });

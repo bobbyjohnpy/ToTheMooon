@@ -59,8 +59,23 @@ nav a {
   color: var(--text-muted);
   text-decoration: none;
 }
+html.dark nav a:hover {
+  text-shadow: 0 0 12px rgb(96 165 250 / 60%);
+  cursor: pointer;
+  color: #1e6fd9;
+  transition: color 0.5s ease;
+  transition: text-shadow 0.3s ease;
+}
+nav a:hover {
+  text-shadow: 0 0 12px rgb(11 74 152 / 60%);
+  cursor: pointer;
+  color: #1e6fd9;
+  transition: color 0.5s ease;
+  transition: text-shadow 0.3s ease;
+}
 nav a.active {
   color: var(--primary);
+  text-shadow: 0 0 12px rgb(96 165 250 / 60%);
 }
 .nav-right {
   margin-left: auto;
