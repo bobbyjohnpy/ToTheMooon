@@ -34,21 +34,6 @@
     </main>
 
     <!-- App bootstrap -->
-    <script type="module">
-      import { initNav } from "./js/nav.js";
-      import { initAuthGate } from "./js/auth-gate.js";
-      import "./js/auth-ui.js";
-
-      initNav("track");
-
-      import { loadTasks } from "./js/tasks.js";
-    </script>
-
-    <!-- Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js");
-      }
-    </script>
+    <script type="module" src="./js/app-init.js"></script>
   </body>
 </html>

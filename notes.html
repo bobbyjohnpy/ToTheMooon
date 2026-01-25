@@ -32,21 +32,7 @@
         <p>Tracking dashboard coming soon.</p>
       </section>
     </main>
+
     <script type="module" src="./js/app-init.js"></script>
-    <!-- App bootstrap -->
-    <script type="module">
-      import { initNav } from "./js/nav.js";
-      import { initAuthGate } from "./js/auth-gate.js";
-      import "./js/auth-ui.js";
-
-      initNav("track");
-    </script>
-
-    <!-- Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js");
-      }
-    </script>
   </body>
 </html>

@@ -1051,32 +1051,5 @@
     </div>
 
     <script type="module" src="./js/app-init.js"></script>
-
-    <script type="module">
-      import { initAuthGate } from "./js/auth-gate.js";
-      import { loadTasks } from "./js/tasks.js";
-
-      initAuthGate((uid) => {
-        console.log("Tasks page authed:", uid);
-        loadTasks(uid); // 🔥 THIS WAS MISSING
-      });
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").then(() => {
-            console.log("Service Worker registered successfully");
-          });
-        });
-      }
-
-      // PWA Install Prompt
-      let deferredPrompt;
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log("PWA install prompt available");
-      });
-    </script>
-
-    <script type="module" src="./js/auth-ui.js"></script>
   </body>
 </html>

@@ -1,12 +1,13 @@
-import { onAuthReady } from "./auth.js";
+// // js/auth-gate.js
+// import { onAuthReady } from "./auth.js";
 
-export function initAuthGate(onAuthed) {
-  let fired = false;
+// export function initAuthGate(onAuthed) {
+//   let fired = false;
 
-  onAuthReady((user) => {
-    if (!user || fired) return;
+//   onAuthReady((user) => {
+//     if (!user || fired) return;
 
-    fired = true;
-    onAuthed(user.uid);
-  });
-}
+//     fired = true;
+//     onAuthed(user.uid);
+//   });
+// }

@@ -6,78 +6,104 @@ import {
   EmailAuthProvider,
   linkWithCredential,
   signInWithEmailAndPassword,
+  signOut,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 🔒 single source of truth
+// ───────── STATE ─────────
 let currentUser = null;
-let currentUID = null;
-let readyCallbacks = [];
+const authSubscribers = new Set();
 
+let authInitialized = false;
+
+// ───────── INITIALIZE AUTH ─────────
 export function initAuth(onReady) {
-  if (onReady) readyCallbacks.push(onReady);
+  if (onReady) authSubscribers.add(onReady);
+
+  if (authInitialized) return;
+  authInitialized = true;
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      await signInAnonymously(auth);
-      return;
+      // No user → create anonymous account
+      try {
+        await signInAnonymously(auth);
+        return; // callback will fire on next state change
+      } catch (err) {
+        console.error("Failed to sign in anonymously", err);
+        return;
+      }
     }
 
+    // user exists
     currentUser = user;
-    currentUID = user.uid;
 
-    const authPanel = document.getElementById("authPanel");
-    const signInButton = document.getElementById("signInButton");
-    const logoutBtn = document.getElementById("logoutBtn");
-    console.log("in auth.js");
-    if (signInButton) {
-      signInButton.classList.toggle("hidden", !user.isAnonymous);
-      console.log("in sign in");
-    }
+    // Update UI for auth state
+    updateAuthUI(user);
 
-    if (logoutBtn) {
-      logoutBtn.classList.toggle("hidden", user.isAnonymous);
-      console.log("in hide log out");
-    }
-
-    if (authPanel) {
-      authPanel.classList.add("hidden"); // always close on auth change
-    }
-
-    readyCallbacks.forEach((cb) => cb(user));
+    // Fire all ready callbacks
+    authSubscribers.forEach((cb) => cb(user));
   });
 }
 
-export function getUID() {
-  return currentUID;
-}
-
+// ───────── GETTERS ─────────
 export function getUser() {
   return currentUser;
 }
+export function getUID() {
+  return currentUser?.uid || null;
+}
 
 // ───────── AUTH ACTIONS ─────────
-
 export async function signIn(email, password) {
-  return signInWithEmailAndPassword(auth, email, password);
+  if (!email || !password) throw new Error("Missing email or password");
+  const user = await signInWithEmailAndPassword(auth, email, password);
+  currentUser = user.user;
+  updateAuthUI(currentUser);
+  return currentUser;
 }
 
 export async function upgradeAnonymousAccount(email, password) {
-  if (!currentUser || !currentUser.isAnonymous) {
-    throw new Error("No anonymous user to upgrade");
-  }
+  if (!currentUser) throw new Error("No current user");
+  if (!currentUser.isAnonymous) throw new Error("User is already registered");
 
   const credential = EmailAuthProvider.credential(email, password);
-  return linkWithCredential(currentUser, credential);
-}
-export async function logout() {
-  await signOut(auth);
-  location.reload(); // clean reset
-}
-export function onAuthReady(cb) {
-  readyCallbacks.push(cb);
-
-  if (currentUser) {
-    cb(currentUser);
+  try {
+    const result = await linkWithCredential(currentUser, credential);
+    currentUser = result.user;
+    updateAuthUI(currentUser);
+    return currentUser;
+  } catch (err) {
+    console.error("Failed to upgrade anonymous account", err);
+    throw err;
   }
+}
+
+// js/auth.js
+export async function logout() {
+  try {
+    window.dispatchEvent(new Event("user-logout"));
+    await signOut(auth);
+  } catch (err) {
+    console.error("Logout failed", err);
+  }
+}
+
+// ───────── CALLBACK REGISTRATION ─────────
+export function onAuthReady(cb) {
+  authSubscribers.add(cb);
+  if (currentUser) cb(currentUser);
+
+  // 🔑 optional unsubscribe handle
+  return () => authSubscribers.delete(cb);
+}
+
+// ───────── UI UPDATE (SIGN-IN / LOGOUT BUTTONS) ─────────
+function updateAuthUI(user) {
+  const signInBtn = document.getElementById("signInButton");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const authPanel = document.getElementById("authPanel");
+
+  if (signInBtn) signInBtn.classList.toggle("hidden", !user.isAnonymous);
+  if (logoutBtn) logoutBtn.classList.toggle("hidden", user.isAnonymous);
+  if (authPanel) authPanel.classList.add("hidden");
 }

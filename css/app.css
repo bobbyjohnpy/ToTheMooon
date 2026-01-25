@@ -24,6 +24,12 @@ html.dark {
 * {
   box-sizing: border-box;
 }
+html {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
 body {
   margin: 0;
   font-family: "Inter", sans-serif;

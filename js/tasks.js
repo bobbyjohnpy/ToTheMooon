@@ -12,7 +12,6 @@ import {
   arrayUnion,
   Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { initAuth, logout } from "./auth.js";
 
 let uid = null;
 let unsubscribeTasks = null;
@@ -35,6 +34,7 @@ const taskStore = new Map(); // taskId -> task object
    LOAD TASKS
 --------------------- */
 export function loadTasks(userId) {
+  console.log("in load tasks");
   if (!userId) return;
   uid = userId;
 
@@ -730,3 +730,27 @@ document.querySelectorAll(".priority-btn").forEach((btn) => {
     console.log("selected priority", selectedPriority);
   });
 });
+
+// js/tasks.js
+export function clearTasksUI() {
+  const columns = ["todo", "started", "inprogress", "done"];
+
+  columns.forEach((id) => {
+    const col = document.getElementById(id);
+    if (col) col.innerHTML = "";
+  });
+
+  // reset counters
+  const counts = {
+    todo: "count-todo",
+    started: "count-started",
+    inprogress: "count-inprogress",
+    done: "count-done",
+  };
+
+  Object.values(counts).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "0";
+  });
+}
+const STORAGE_KEY = "theme";
