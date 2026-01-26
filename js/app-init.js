@@ -2,9 +2,13 @@
 import { loadLayout } from "./layout.js";
 import { initNav } from "./nav.js";
 import { initAuthUI } from "./auth-ui.js";
-import { initAuth, onAuthReady } from "./auth.js";
-import { loadTasks, clearTasksUI } from "./tasks.js";
+import { initAuth, onAuthReady, getUID } from "./auth.js";
+import { clearTasksUI } from "./tasks.js";
 import { initThemeToggle } from "./theme.js";
+import { initProjectTasks } from "./tasks.js";
+import { setCurrentProject } from "./project.js";
+import { initProjectUI, populateProjectDropdown } from "./project-ui.js";
+import { ensureFirstProject } from "./projects-service.js";
 let lastLoadedUID = null;
 
 (async function initApp() {
@@ -21,16 +25,26 @@ let lastLoadedUID = null;
   initAuth();
   initThemeToggle(); // 🔥 AFTER layout
   // 5️⃣ React to auth state changes
-  onAuthReady((user) => {
+  onAuthReady(async (user) => {
     if (!document.getElementById("todo")) return;
 
-    // 🔄 UID changed (initial anon, sign-in, upgrade, logout)
     if (user.uid !== lastLoadedUID) {
-      console.log("Auth change → reload tasks:", user.uid);
+      console.log("Auth change → init project task system:", user.uid);
 
-      clearTasksUI(); // 🔥 clear previous user's tasks
+      clearTasksUI();
       lastLoadedUID = user.uid;
-      loadTasks(user.uid); // 🔥 load correct user's tasks
+
+      // 1️⃣ Ensure at least one project exists
+      const firstProjectId = await ensureFirstProject(user.uid);
+
+      // 2️⃣ Populate dropdown (existing OR newly created projects)
+      await populateProjectDropdown(user.uid);
+
+      // 3️⃣ Init project-aware task listeners
+      initProjectTasks(user.uid);
+      initProjectUI();
+      // 4️⃣ Activate project (triggers task load)
+      setCurrentProject(firstProjectId);
     }
   });
 

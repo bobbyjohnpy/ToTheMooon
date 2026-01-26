@@ -139,6 +139,10 @@ html.dark .nav-right input {
   justify-content: center;
   z-index: 1000;
 }
+#projectSelect {
+  width: 100px;
+  height: 100px;
+}
 .hidden {
   display: none;
 }

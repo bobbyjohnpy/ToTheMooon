@@ -33,21 +33,25 @@ const taskStore = new Map(); // taskId -> task object
 /* ---------------------
    LOAD TASKS
 --------------------- */
-export function loadTasks(userId) {
-  console.log("in load tasks");
-  if (!userId) return;
-  uid = userId;
+import { getCurrentProject, onProjectChange } from "./project.js";
 
+export function loadTasksForProject(userId, projectId) {
   if (unsubscribeTasks) unsubscribeTasks();
-
-  const q = query(
-    collection(db, "users", uid, "tasks"),
-    orderBy("createdAt", "desc"),
+  uid = userId;
+  if (!uid) throw new Error("UID not initialized");
+  if (!projectId) throw new Error("No project selected");
+  const tasksCol = collection(
+    db,
+    "users",
+    userId,
+    "projects",
+    projectId,
+    "tasks",
   );
+  const q = query(tasksCol, orderBy("createdAt", "desc"));
 
   unsubscribeTasks = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
-      console.log(change);
       const taskId = change.doc.id;
       const task = change.doc.data();
 
@@ -58,25 +62,26 @@ export function loadTasks(userId) {
       }
 
       const prev = taskStore.get(taskId);
-      let prevpic = prevSnapshot;
-
       taskStore.set(taskId, task);
 
-      const status = task.status || "todo";
-      const container = document.getElementById(
-        status === "progress" ? "inprogress" : status,
-      );
-
+      const container = document.getElementById(task.status || "todo");
       const existing = document.querySelector(`.card[data-id="${taskId}"]`);
 
       if (!existing) {
         container.appendChild(renderTask(taskId, task));
       } else {
-        updateCardUI(existing, task, prev, prevpic);
+        updateCardUI(existing, task, prev);
       }
     });
-
     updateCounters();
+  });
+}
+
+// Listen to project switches
+export function initProjectTasks(userId) {
+  onProjectChange((projectId) => {
+    clearTasksUI();
+    if (projectId) loadTasksForProject(userId, projectId);
   });
 }
 
@@ -553,16 +558,17 @@ function openTaskModal() {
 
 document.getElementById("saveTaskBtn")?.addEventListener("click", async () => {
   const titleInput = document.getElementById("taskTitleInput");
-
   const title = titleInput?.value.trim();
+
   if (!title) return alert("Task needs a title");
 
-  const urgency = selectedPriority;
+  const projectId = getCurrentProject();
+  console.log(projectId);
+  if (!projectId) return alert("No active project");
 
-  await addDoc(collection(db, "users", uid, "tasks"), {
+  await addDoc(collection(db, "users", uid, "projects", projectId, "tasks"), {
     title,
-    urgency,
-    selectedPriority,
+    urgency: selectedPriority,
     status: "todo",
     subtasks: [],
     createdAt: Timestamp.now(),
