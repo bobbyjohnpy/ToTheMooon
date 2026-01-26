@@ -1,6 +1,8 @@
 import { getProjects, createProject } from "./projects-service.js";
 import { setCurrentProject } from "./project.js";
 import { getUID } from "./auth.js";
+import { setKanbanMode } from "./kanban-mode.js";
+import { loadRootKanban } from "./root-kanban.js";
 
 export async function populateProjectDropdown() {
   const uid = getUID();
@@ -12,6 +14,12 @@ export async function populateProjectDropdown() {
   const projects = await getProjects(uid);
   select.innerHTML = "";
 
+  // 🧠 ROOT OPTION
+  const rootOpt = document.createElement("option");
+  rootOpt.value = "__root__";
+  rootOpt.textContent = "All Projects";
+  select.appendChild(rootOpt);
+
   projects.forEach((p) => {
     const opt = document.createElement("option");
     opt.value = p.id;
@@ -19,18 +27,26 @@ export async function populateProjectDropdown() {
     select.appendChild(opt);
   });
 
-  if (projects.length) {
-    setCurrentProject(projects[0].id);
-    select.value = projects[0].id;
-  }
+  // default selection
+  select.value = "__root__";
 }
 
 export function initProjectUI() {
   const select = document.getElementById("projectSelect");
   const addBtn = document.getElementById("addProjectBtn");
 
-  select?.addEventListener("change", () => {
-    setCurrentProject(select.value);
+  select?.addEventListener("change", async () => {
+    const value = select.value;
+    const uid = getUID();
+
+    if (value === "__root__") {
+      setKanbanMode("root");
+      await loadRootKanban(uid);
+      return;
+    }
+
+    setKanbanMode("project");
+    setCurrentProject(value);
   });
 
   addBtn?.addEventListener("click", async () => {
@@ -41,6 +57,9 @@ export function initProjectUI() {
     const projectId = await createProject(uid, name);
 
     await populateProjectDropdown();
+    select.value = projectId;
+
+    setKanbanMode("project");
     setCurrentProject(projectId);
   });
 }

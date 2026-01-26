@@ -33,6 +33,7 @@ export async function createProject(uid, name) {
 
   const ref = await addDoc(collection(db, "users", uid, "projects"), {
     name,
+    status: "todo", // ✅ REQUIRED FOR ROOT KANBAN
     createdAt: Timestamp.now(),
   });
 

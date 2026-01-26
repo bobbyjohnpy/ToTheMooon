@@ -12,7 +12,8 @@ import {
   arrayUnion,
   Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+import { getKanbanMode } from "./kanban-mode.js";
+import { getUID } from "./auth.js";
 let uid = null;
 let unsubscribeTasks = null;
 let openTaskId = null;
@@ -79,6 +80,7 @@ export function loadTasksForProject(userId, projectId) {
 
 // Listen to project switches
 export function initProjectTasks(userId) {
+  if (!document.getElementById("todo")) return;
   onProjectChange((projectId) => {
     clearTasksUI();
     if (projectId) loadTasksForProject(userId, projectId);
@@ -172,9 +174,12 @@ function renderTask(taskId, task) {
     const current = currentTask.urgency || "medium";
     const next = getNextPriority(current);
 
-    await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-      urgency: next,
-    });
+    const projectId = getCurrentProject();
+    if (!projectId) return;
+    await updateDoc(
+      doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+      { urgency: next },
+    );
   });
 
   const deleteBtn = card.querySelector(".delete-task-btn");
@@ -196,7 +201,7 @@ function renderTask(taskId, task) {
 
   // Save note to Firestore on change
   notesInput.addEventListener("change", async () => {
-    await updateDoc(doc(db, "users", uid, "tasks", taskId), {
+    await updateDoc(taskRef(uid, taskId), {
       notes: notesInput.value,
     });
   });
@@ -315,6 +320,11 @@ function renderSubtasks(card) {
   const taskId = card.dataset.id;
   const task = taskStore.get(taskId);
   if (!task) return;
+  const projectId = getCurrentProject();
+  if (!projectId) {
+    console.warn("Subtask update blocked: no active project");
+    return;
+  }
 
   const container = card.querySelector(".subtasks");
   container.innerHTML = "";
@@ -371,9 +381,11 @@ function renderSubtasks(card) {
     // Save note to Firestore
     subNotesInput.addEventListener("change", async () => {
       s.notes = subNotesInput.value; // update local object
-      await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-        subtasks: task.subtasks,
-      });
+      await updateDoc(
+        doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+        { subtasks: task.subtasks },
+      );
+
       console.log("J");
     });
     const deleteBtn = row.querySelector(".subtask-delete-btn");
@@ -390,18 +402,20 @@ function renderSubtasks(card) {
           !(st.text === s.text && st.createdAt.seconds === s.createdAt.seconds),
       );
 
-      await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-        subtasks: updatedSubtasks,
-      });
+      await updateDoc(
+        doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+        { subtasks: updatedSubtasks },
+      );
     };
 
     checkbox.onclick = (e) => e.stopPropagation();
     prevSnapshot = JSON.parse(JSON.stringify(taskStore.get(taskId)));
     checkbox.onchange = async () => {
       s.completed = checkbox.checked;
-      await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-        subtasks: task.subtasks,
-      });
+      await updateDoc(
+        doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+        { subtasks: task.subtasks },
+      );
     };
 
     container.appendChild(row);
@@ -463,13 +477,19 @@ function setupAddSubtask(card, taskId) {
       const text = input.value.trim();
       if (!text) return;
 
-      await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-        subtasks: arrayUnion({
-          text,
-          completed: false,
-          createdAt: Timestamp.now(),
-        }),
-      });
+      const projectId = getCurrentProject();
+      if (!projectId) return;
+
+      await updateDoc(
+        doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+        {
+          subtasks: arrayUnion({
+            text,
+            completed: false,
+            createdAt: Timestamp.now(),
+          }),
+        },
+      );
 
       wrapper.remove();
     };
@@ -511,7 +531,20 @@ document.querySelectorAll(".column-body").forEach((col) => {
   col.addEventListener("drop", async () => {
     const card = document.querySelector(".dragging");
     if (!card) return;
+    if (card.classList.contains("project-card")) {
+      const uid = getUID();
+      if (!uid) return;
 
+      console.log(card.dataset.id);
+      console.log(col.id);
+      console.log(uid);
+      await updateDoc(doc(db, "users", uid, "projects", card.dataset.id), {
+        status: col.id,
+      });
+      return;
+    }
+    const projectId = getCurrentProject();
+    if (!projectId) return;
     const taskId = card.dataset.id;
     const task = taskStore.get(taskId);
     if (!task) return;
@@ -537,9 +570,10 @@ document.querySelectorAll(".column-body").forEach((col) => {
     }
 
     // ✅ normal allowed drop
-    await updateDoc(doc(db, "users", uid, "tasks", taskId), {
-      status: col.id,
-    });
+    await updateDoc(
+      doc(db, "users", uid, "projects", projectId, "tasks", taskId),
+      { status: col.id },
+    );
   });
 });
 
@@ -547,6 +581,8 @@ document.querySelectorAll(".column-body").forEach((col) => {
    ADD TASK MODAL (RESTORED)
 --------------------- */
 document.getElementById("newTaskBtn")?.addEventListener("click", () => {
+  if (getKanbanMode() === "root") return;
+
   openTaskModal();
 });
 
@@ -760,3 +796,12 @@ export function clearTasksUI() {
   });
 }
 const STORAGE_KEY = "theme";
+function projectRef(uid, projectId) {
+  return doc(db, "users", uid, "projects", projectId);
+}
+
+function taskRef(uid, taskId) {
+  const projectId = getCurrentProject();
+  if (!projectId) throw new Error("No active project");
+  return doc(db, "users", uid, "projects", projectId, "tasks", taskId);
+}

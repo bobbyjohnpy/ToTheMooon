@@ -9,6 +9,8 @@ import { initProjectTasks } from "./tasks.js";
 import { setCurrentProject } from "./project.js";
 import { initProjectUI, populateProjectDropdown } from "./project-ui.js";
 import { ensureFirstProject } from "./projects-service.js";
+import { setKanbanMode } from "./kanban-mode.js";
+import { loadRootKanban } from "./root-kanban.js";
 let lastLoadedUID = null;
 
 (async function initApp() {
@@ -26,25 +28,26 @@ let lastLoadedUID = null;
   initThemeToggle(); // 🔥 AFTER layout
   // 5️⃣ React to auth state changes
   onAuthReady(async (user) => {
-    if (!document.getElementById("todo")) return;
+    if (user.uid === lastLoadedUID) return;
 
-    if (user.uid !== lastLoadedUID) {
-      console.log("Auth change → init project task system:", user.uid);
+    console.log("Auth change → init project system:", user.uid);
 
+    lastLoadedUID = user.uid;
+
+    // 🔹 ALWAYS run (all pages)
+    const firstProjectId = await ensureFirstProject(user.uid);
+    await populateProjectDropdown(user.uid);
+    initProjectUI(); // dropdown listeners, root option, etc.
+
+    // 🔹 Tasks page ONLY
+    if (document.getElementById("todo")) {
       clearTasksUI();
-      lastLoadedUID = user.uid;
 
-      // 1️⃣ Ensure at least one project exists
-      const firstProjectId = await ensureFirstProject(user.uid);
-
-      // 2️⃣ Populate dropdown (existing OR newly created projects)
-      await populateProjectDropdown(user.uid);
-
-      // 3️⃣ Init project-aware task listeners
       initProjectTasks(user.uid);
-      initProjectUI();
-      // 4️⃣ Activate project (triggers task load)
-      setCurrentProject(firstProjectId);
+
+      // start in ROOT kanban
+      setKanbanMode("root");
+      loadRootKanban(user.uid);
     }
   });
 
@@ -55,3 +58,11 @@ let lastLoadedUID = null;
     });
   }
 })();
+window.addEventListener("enter-project", (e) => {
+  const projectId = e.detail;
+  const uid = getUID();
+  if (!uid || !projectId) return;
+
+  setKanbanMode("project");
+  setCurrentProject(projectId);
+});
