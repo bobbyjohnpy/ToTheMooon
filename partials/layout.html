@@ -4,28 +4,28 @@
     TaskMaster
   </div>
   <nav>
+    <div class="project-picker">
+      <select id="projectSelect"></select>
+    </div>
     <a class="active">Dashboard</a> <a>Tasks</a> <a>Track</a> <a>Notes</a
     ><a>Progress</a>
   </nav>
   <div class="nav-right">
     <input type="search" placeholder="Search tasks..." />
     <span class="material-symbols-outlined">notifications</span>
-    <button id="logoutBtn" class="hidden">
-      <span class="material-symbols-outlined">logout</span>
-    </button>
-    <button id="signInButton" class="hidden">
-      <span class="material-symbols-outlined">account_circle</span>
-    </button>
+
+    <span class="material-symbols-outlined hidden" id="logoutBtn">logout</span>
+
+    <span class="material-symbols-outlined hidden" id="signInButton"
+      >account_circle</span
+    >
+
     <!-- Dark mode toggle button -->
     <button id="darkModeToggle" class="material-symbols-outlined">
       dark_mode
     </button>
   </div>
 </header>
-<div class="project-picker">
-  <select id="projectSelect"></select>
-  <button id="addProjectBtn">＋</button>
-</div>
 
 <div id="authPanel" class="auth-backdrop hidden">
   <div class="auth-modal">

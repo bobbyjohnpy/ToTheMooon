@@ -12,6 +12,7 @@
 
     <!-- Global styles -->
     <link rel="stylesheet" href="./css/app.css" />
+    <link rel="stylesheet" href="./css/notes.css" />
 
     <!-- Icons -->
     <link
@@ -25,11 +26,101 @@
     <div id="app-shell"></div>
 
     <!-- Page content ONLY -->
-    <main>
-      <h1>Track</h1>
+    <main class="notes-layout">
+      <!-- Sidebar -->
+      <aside class="notes-sidebar">
+        <div class="notes-brand">
+          <span class="logo-box">📝</span>
+          <span class="brand-text">NotesFlow</span>
+        </div>
 
-      <section class="card">
-        <p>Tracking dashboard coming soon.</p>
+        <button class="new-note-btn">+ New Note</button>
+
+        <div class="sidebar-section">
+          <p class="sidebar-label">WORKSPACE</p>
+          <ul class="workspace-list">
+            <li class="active">📁 Business Meetings</li>
+            <li>✔️ To-Do Lists</li>
+            <li>💡 Project Ideas</li>
+            <li>👤 Personal</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-section">
+          <p class="sidebar-label">OTHER</p>
+          <ul class="workspace-list">
+            <li>🗄 Archive</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="user-pill">
+            <div class="avatar"></div>
+            <div>
+              <p class="user-name">You</p>
+              <p class="user-plan">Founder OS</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <section class="notes-main">
+        <!-- Top bar -->
+        <div class="notes-topbar">
+          <input class="notes-search" placeholder="Search your notes..." />
+          <div class="topbar-actions">
+            <button class="ghost-btn">Filter</button>
+            <button class="ghost-btn">Sort</button>
+          </div>
+        </div>
+
+        <!-- Header -->
+        <div class="notes-header">
+          <h1>Business Meetings</h1>
+          <p class="notes-subtitle">
+            Manage and organize your corporate meeting logs and strategy notes.
+          </p>
+        </div>
+
+        <!-- Notes Grid -->
+        <div class="notes-grid">
+          <!-- Card -->
+          <div class="note-card">
+            <span class="tag blue">STRATEGY</span>
+            <h3>Q3 Strategy</h3>
+            <p>
+              Previewing goals and revenue targets for the upcoming quarter...
+            </p>
+            <div class="note-footer">Last edited 2 hours ago</div>
+          </div>
+
+          <div class="note-card">
+            <span class="tag green">ONBOARDING</span>
+            <h3>Client Onboarding</h3>
+            <p>
+              Steps for welcoming the new fintech partner and setting up the
+              environment...
+            </p>
+            <div class="note-footer">Last edited 5 hours ago</div>
+          </div>
+
+          <div class="note-card highlighted">
+            <span class="tag orange">SYNC</span>
+            <h3>Weekly Sync</h3>
+            <p>
+              Discussion points regarding the design sprint and developer
+              handoff...
+            </p>
+            <div class="note-footer">Last edited 1 day ago</div>
+          </div>
+
+          <!-- Add Card -->
+          <div class="note-card add-card">
+            <div class="plus">＋</div>
+            <p>Add New Meeting Note</p>
+          </div>
+        </div>
       </section>
     </main>
 

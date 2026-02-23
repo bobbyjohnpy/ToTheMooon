@@ -58,6 +58,7 @@ header {
 nav {
   display: flex;
   gap: 28px;
+  align-items: center;
 }
 nav a {
   font-size: 14px;
@@ -81,7 +82,7 @@ nav a:hover {
 }
 nav a.active {
   color: var(--primary);
-  text-shadow: 0 0 12px rgb(96 165 250 / 60%);
+  text-shadow: 0 0 8px rgb(151 174 202 / 40%);
 }
 .nav-right {
   margin-left: auto;
@@ -140,12 +141,44 @@ html.dark .nav-right input {
   z-index: 1000;
 }
 #projectSelect {
-  width: 100px;
-  height: 100px;
+  background: var(--header-bg);
+  color: var(--text-muted);
+  border: none;
+  width: fit-content;
+  font-size: 14px;
+  font-weight: 600;
+  height: fit-content;
+  margin-right: 20px;
+  transition: all 0.3s ease;
+  outline: none;
 }
-.hidden {
+html.dark #projectSelect {
+  color: var(--text-main);
+}
+select:focus,
+select:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+#projectSelect:hover {
+  color: var(--primary);
+  background-color: var();
+}
+#projectSelect option {
+  color: var(--text-main);
+}
+
+.hidden,
+#logoutBtn.hidden,
+#signInButton.hidden {
   display: none;
 }
+.project-picker {
+  display: flex;
+  justify-content: start;
+}
+
 .auth-backdrop.hidden {
   display: none;
 } /* Modal Card */

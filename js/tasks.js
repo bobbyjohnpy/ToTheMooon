@@ -37,6 +37,8 @@ const taskStore = new Map(); // taskId -> task object
 import { getCurrentProject, onProjectChange } from "./project.js";
 
 export function loadTasksForProject(userId, projectId) {
+  console.log("hhelo");
+
   if (unsubscribeTasks) unsubscribeTasks();
   uid = userId;
   if (!uid) throw new Error("UID not initialized");
@@ -55,6 +57,7 @@ export function loadTasksForProject(userId, projectId) {
     snapshot.docChanges().forEach((change) => {
       const taskId = change.doc.id;
       const task = change.doc.data();
+      console.log("change tasks");
 
       if (change.type === "removed") {
         taskStore.delete(taskId);

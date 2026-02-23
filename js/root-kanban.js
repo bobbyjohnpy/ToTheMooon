@@ -8,17 +8,18 @@ import {
 
 import { clearTasksUI } from "./tasks.js";
 import { setKanbanMode } from "./kanban-mode.js";
-let unsubscribe = null;
+let unsubscribeRoot = null;
+
 export function loadRootKanban(uid) {
   if (!uid) return;
   console.log("inload root kanban");
-  if (unsubscribe) unsubscribe();
+  if (unsubscribeRoot) unsubscribe();
 
   clearTasksUI();
 
   const ref = collection(db, "users", uid, "projects");
 
-  unsubscribe = onSnapshot(ref, (snap) => {
+  unsubscribeRoot = onSnapshot(ref, (snap) => {
     clearTasksUI();
 
     snap.forEach((d) => {
@@ -112,3 +113,9 @@ function updateCounts() {
   });
 }
 // root-kanban.js
+export function stopRootKanban() {
+  if (unsubscribeRoot) {
+    unsubscribeRoot();
+    unsubscribeRoot = null;
+  }
+}

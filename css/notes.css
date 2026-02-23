@@ -1,0 +1,556 @@
+/* Layout */
+.notes-layout {
+  display: flex;
+  height: calc(100vh - 64px);
+  background: #f6f8fb;
+}
+
+/* Sidebar */
+.notes-sidebar {
+  width: 260px;
+  background: white;
+  border-right: 1px solid #e6e9ef;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+}
+
+.notes-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.logo-box {
+  width: 34px;
+  height: 34px;
+  background: #eef2ff;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.new-note-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.sidebar-section {
+  margin-bottom: 18px;
+}
+
+.sidebar-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.workspace-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.workspace-list li {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.workspace-list li.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.user-pill {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: #e2e8f0;
+  border-radius: 50%;
+}
+
+/* Main Area */
+.notes-main {
+  flex: 1;
+  padding: 24px 32px;
+  overflow-y: auto;
+}
+
+/* Topbar */
+.notes-topbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.notes-search {
+  width: 420px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.ghost-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+/* Header */
+.notes-header h1 {
+  margin: 0;
+}
+
+.notes-subtitle {
+  color: #64748b;
+  margin-top: 6px;
+  margin-bottom: 24px;
+}
+
+/* Grid */
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+/* Cards */
+.note-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e6e9ef;
+  transition: 0.15s ease;
+}
+
+.note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.note-card.highlighted {
+  border-color: #93c5fd;
+}
+
+/* Tags */
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.tag.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.tag.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.tag.orange {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.note-footer {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 12px;
+}
+
+/* Add card */
+.add-card {
+  border: 2px dashed #cbd5f5;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.add-card .plus {
+  font-size: 24px;
+}
+/* ================================
+   NOTES — DARK MODE INTEGRATION
+   Uses your global theme variables
+================================ */
+
+/* Layout background */
+.notes-layout {
+  background: var(--bg);
+}
+
+/* Sidebar */
+.notes-sidebar {
+  background: var(--header-bg);
+  border-right: 1px solid var(--border);
+}
+
+.logo-box {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.brand-text {
+  color: var(--text-main);
+}
+
+/* Sidebar items */
+.workspace-list li {
+  color: var(--text-muted);
+}
+
+.workspace-list li.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--primary);
+}
+
+/* Buttons */
+.new-note-btn {
+  background: var(--primary);
+}
+
+.new-note-btn:hover {
+  filter: brightness(1.05);
+}
+
+/* Main area */
+.notes-main {
+  background: var(--bg);
+}
+
+/* Search */
+.notes-search {
+  background: var(--column-bg);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.notes-search::placeholder {
+  color: var(--text-muted);
+}
+
+/* Ghost buttons */
+.ghost-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.ghost-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Header text */
+.notes-header h1 {
+  color: var(--text-main);
+}
+
+.notes-subtitle {
+  color: var(--text-muted);
+}
+
+/* Cards */
+.note-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  box-shadow: var(--shadow);
+}
+
+.note-card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Highlighted card */
+.note-card.highlighted {
+  border-color: var(--primary);
+}
+
+/* Footer */
+.note-footer {
+  color: var(--text-muted);
+}
+
+/* Add card */
+.add-card {
+  border: 2px dashed var(--border);
+  color: var(--primary);
+}
+
+/* Avatar */
+.avatar {
+  background: var(--column-bg);
+}
+html.dark .note-card:hover {
+  outline: 1px solid rgba(96, 165, 250, 0.25);
+}
+.note-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.note-modal:not(.hidden) {
+  opacity: 1;
+}
+
+.note-modal.hidden {
+  display: none;
+}
+.note-modal.hidden {
+  display: none;
+}
+
+.note-modal-content {
+  width: 1100px;
+  height: 720px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.25),
+    0 0 0 1px var(--border);
+}
+
+.modal-title {
+  font-size: 32px;
+  font-weight: 800;
+  border: none;
+  background: transparent;
+  margin-bottom: 20px;
+  color: var(--text-main);
+}
+
+.modal-body {
+  min-height: 200px;
+  resize: vertical;
+  border: none;
+  background: var(--column-bg);
+  padding: 12px;
+  border-radius: 10px;
+  color: var(--text-main);
+}
+.modal-category-pill {
+  margin-bottom: 20px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.primary-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.danger-btn {
+  background: transparent;
+  color: #ef4444;
+  border: none;
+}
+.notes-grid.modal-open {
+  transform: scale(0.985);
+  transition: transform 400ms ease;
+}
+.modal-header {
+  height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--header-bg);
+}
+
+.modal-breadcrumb {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.modal-breadcrumb span {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.autosave {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.modal-layout {
+  display: flex;
+  flex: 1;
+}
+
+.modal-editor {
+  flex: 1;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-sidebar {
+  width: 300px;
+  border-left: 1px solid var(--border);
+  padding: 30px 24px;
+  background: var(--header-bg);
+}
+.modal-body {
+  flex: 1;
+  resize: none;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.modal-body:focus {
+  outline: none;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+}
+.meta-section {
+  margin-bottom: 28px;
+}
+
+.meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.meta-box {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--column-bg);
+  font-weight: 600;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+.modal-category-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+/* Pill */
+.modal-category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Editor */
+.category-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-input {
+  border: none;
+  border-bottom: 2px solid var(--primary);
+  background: transparent;
+  outline: none;
+  font-weight: 600;
+  width: 120px;
+}
+
+.category-color {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* Dropdown */
+.category-dropdown {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+}
+
+.category-option {
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.category-option:hover {
+  background: var(--column-bg);
+}
+.modal-category-pill.hidden,
+.category-editor.hidden {
+  display: none;
+}

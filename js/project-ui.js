@@ -1,8 +1,9 @@
 import { getProjects, createProject } from "./projects-service.js";
-import { setCurrentProject } from "./project.js";
+import { setCurrentProject, getCurrentProject } from "./project.js";
 import { getUID } from "./auth.js";
-import { setKanbanMode } from "./kanban-mode.js";
+import { getKanbanMode, setKanbanMode } from "./kanban-mode.js";
 import { loadRootKanban } from "./root-kanban.js";
+import { clearTasksUI } from "./tasks.js";
 
 export async function populateProjectDropdown() {
   const uid = getUID();
@@ -26,6 +27,11 @@ export async function populateProjectDropdown() {
     opt.textContent = p.name;
     select.appendChild(opt);
   });
+  const AddOpt = document.createElement("option");
+  AddOpt.value = "addprojectoption";
+  AddOpt.textContent = "add project +";
+  AddOpt.id = "addProjectBtn";
+  select.appendChild(AddOpt);
 
   // default selection
   select.value = "__root__";
@@ -34,32 +40,57 @@ export async function populateProjectDropdown() {
 export function initProjectUI() {
   const select = document.getElementById("projectSelect");
   const addBtn = document.getElementById("addProjectBtn");
+  if (!select) return;
 
-  select?.addEventListener("change", async () => {
+  const uid = getUID();
+
+  // 🔄 Restore selection on load
+  const mode = getKanbanMode();
+  const currentProject = getCurrentProject();
+
+  if (mode === "root") {
+    select.value = "__root__";
+  } else if (currentProject) {
+    select.value = currentProject;
+  }
+
+  // 🔁 Handle dropdown change
+  select.addEventListener("change", async () => {
     const value = select.value;
-    const uid = getUID();
 
     if (value === "__root__") {
       setKanbanMode("root");
-      await loadRootKanban(uid);
+      console.log("root mode");
+
+      // Only load kanban if tasks page exists
+      if (document.getElementById("todo")) {
+        await loadRootKanban(uid);
+      }
       return;
     }
+    console.log("project");
 
-    setKanbanMode("project");
     setCurrentProject(value);
+    setKanbanMode("project");
   });
 
-  addBtn?.addEventListener("click", async () => {
-    const name = prompt("Project name?");
-    if (!name) return;
+  // ➕ Add project
+  console.log("add button", addBtn);
+  select.addEventListener("change", async (e) => {
+    if (e.target.value === "addprojectoption") {
+      const name = prompt("Project name?");
+      if (!name) return;
 
-    const uid = getUID();
-    const projectId = await createProject(uid, name);
+      const { createProject } = await import("./projects-service.js");
+      const { populateProjectDropdown } = await import("./project-ui.js");
 
-    await populateProjectDropdown();
-    select.value = projectId;
+      const projectId = await createProject(uid, name);
 
-    setKanbanMode("project");
-    setCurrentProject(projectId);
+      await populateProjectDropdown(uid);
+      select.value = projectId;
+
+      setKanbanMode("project");
+      setCurrentProject(projectId);
+    }
   });
 }

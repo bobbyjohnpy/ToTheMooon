@@ -102,7 +102,7 @@ function updateAuthUI(user) {
   const signInBtn = document.getElementById("signInButton");
   const logoutBtn = document.getElementById("logoutBtn");
   const authPanel = document.getElementById("authPanel");
-
+  console.log("in update auth");
   if (signInBtn) signInBtn.classList.toggle("hidden", !user.isAnonymous);
   if (logoutBtn) logoutBtn.classList.toggle("hidden", user.isAnonymous);
   if (authPanel) authPanel.classList.add("hidden");
