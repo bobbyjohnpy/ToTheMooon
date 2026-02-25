@@ -658,9 +658,12 @@ document
   .getElementById("confirmDeleteTaskBtn")
   ?.addEventListener("click", async () => {
     if (!taskToDeleteId) return;
-
+    const projectId = getCurrentProject();
+    console.log(taskToDeleteId);
     try {
-      await deleteDoc(doc(db, "users", uid, "tasks", taskToDeleteId));
+      await deleteDoc(
+        doc(db, "users", uid, "projects", projectId, "tasks", taskToDeleteId),
+      );
       // Firestore snapshot will remove the card
     } catch (err) {
       console.error("Failed to delete task", err);

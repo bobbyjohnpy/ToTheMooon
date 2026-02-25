@@ -135,22 +135,44 @@
 /* Grid */
 .notes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 18px;
 }
 
 /* Cards */
 .note-card {
+  display: flex;
   background: white;
   border-radius: 12px;
   padding: 16px;
   border: 1px solid #e6e9ef;
   transition: 0.15s ease;
+  justify-content: space-between;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  box-shadow: var(--shadow);
+
+  flex-direction: column;
+
+  /* subtle elevation */
 }
 
 .note-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  /* transform: translateY(-2px); */
+  /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05); */
+  border-color: #269cee;
+  box-shadow:
+    0 1px 2px #269cee,
+    0 1px 3px #269cee;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+.plus,
+.note-card :is(.add-note-card-text, h3) {
+  transition: 0.15s ease;
+}
+.note-card:hover :is(.plus, .add-note-card-text, h3) {
+  color: rgb(32, 127, 233, 1);
 }
 
 .note-card.highlighted {
@@ -162,26 +184,21 @@
   font-size: 10px;
   font-weight: 700;
   padding: 4px 8px;
-  border-radius: 999px;
-}
+  border-radius: 5px;
+  width: fit-content;
 
-.tag.blue {
-  background: #dbeafe;
-  color: #2563eb;
-}
-.tag.green {
-  background: #dcfce7;
-  color: #16a34a;
-}
-.tag.orange {
-  background: #ffedd5;
-  color: #ea580c;
+  font-weight: 800;
 }
 
 .note-footer {
   font-size: 12px;
-  color: #94a3b8;
   margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(226, 232, 240, 1);
+  padding-top: 10px;
+  color: var(--text-muted);
 }
 
 /* Add card */
@@ -192,10 +209,16 @@
   text-align: center;
   color: #6366f1;
   font-weight: 600;
+  display: flex;
+  justify-content: center;
 }
 
 .add-card .plus {
-  font-size: 24px;
+  color: #64748b;
+}
+
+.plus span {
+  font-size: 36px;
 }
 /* ================================
    NOTES — DARK MODE INTEGRATION
@@ -278,25 +301,22 @@
 }
 
 /* Cards */
-.note-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  box-shadow: var(--shadow);
-}
-
-.note-card:hover {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
 
 /* Highlighted card */
 .note-card.highlighted {
   border-color: var(--primary);
 }
 
-/* Footer */
-.note-footer {
-  color: var(--text-muted);
+.note-card p {
+  display: -webkit-box; /* needed for line clamp */
+  -webkit-box-orient: vertical; /* vertical layout */
+  -webkit-line-clamp: 3; /* number of lines to show */
+  overflow: hidden; /* hide overflow */
+  text-overflow: ellipsis; /* show … at the end */
+  word-break: break-word; /* break long words */
+  color: #64748b;
+  margin: 0px;
+  white-space: normal; /* allow wrapping */
 }
 
 /* Add card */
@@ -328,9 +348,6 @@ html.dark .note-card:hover {
   opacity: 1;
 }
 
-.note-modal.hidden {
-  display: none;
-}
 .note-modal.hidden {
   display: none;
 }
@@ -367,9 +384,7 @@ html.dark .note-card:hover {
   border-radius: 10px;
   color: var(--text-main);
 }
-.modal-category-pill {
-  margin-bottom: 20px;
-}
+
 .modal-actions {
   display: flex;
   justify-content: space-between;
@@ -435,7 +450,24 @@ html.dark .note-card:hover {
   display: flex;
   flex-direction: column;
 }
-
+.delete-note-btn {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  font-size: 12px;
+  border: none;
+  background: none;
+  display: flex;
+  color: #64748b;
+  align-items: center;
+}
+.delete-note-btn:hover {
+  color: rgba(239, 68, 68, 1);
+  cursor: pointer;
+}
+.delete-note-btn .delete-span {
+  font-size: 19px;
+}
 .modal-sidebar {
   width: 300px;
   border-left: 1px solid var(--border);
@@ -497,10 +529,11 @@ html.dark .note-card:hover {
   align-items: center;
   gap: 8px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 5px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  margin-bottom: 20px;
 }
 
 /* Editor */
@@ -553,4 +586,138 @@ html.dark .note-card:hover {
 .modal-category-pill.hidden,
 .category-editor.hidden {
   display: none;
+}
+.note-card.deleting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+.trash-morph {
+  font-size: 42px;
+  color: #ef4444;
+  animation: trashPop 220ms ease;
+}
+
+@keyframes trashPop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.note-modal.no-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: transparent !important;
+}
+.delete-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.delete-modal.hidden {
+  display: none;
+}
+
+/* Backdrop */
+.delete-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+/* Modal card */
+.delete-modal-card {
+  position: relative;
+  margin: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 420px;
+  max-width: calc(100% - 32px);
+  background: white;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  animation: modalPop 0.18s ease-out;
+}
+
+/* Warning icon */
+.delete-modal-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-modal-icon span {
+  font-size: 28px;
+}
+
+/* Title */
+.delete-modal-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #0f172a;
+}
+
+/* Description */
+.delete-modal-text {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+/* Buttons */
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.delete-modal-actions button {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Secondary */
+.btn-secondary {
+  background: white;
+  border: 1px solid #cbd5f5;
+  color: #0f172a;
+}
+
+.btn-secondary:hover {
+  background: #f8fafc;
+}
+
+/* Danger */
+.btn-danger {
+  background: #dc2626;
+  border: none;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
 }

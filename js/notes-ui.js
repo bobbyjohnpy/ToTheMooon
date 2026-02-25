@@ -5,14 +5,18 @@ import {
   deleteNote,
   subscribeNotes,
 } from "./notes-service.js";
-
+let modalVisible = false;
+let modalReadyForSave = false;
 let notesGrid;
 let modal, titleInput, contentInput, categoryInput, saveBtn, deleteBtn;
 let activeNoteId = null;
-let optionClicking = false;
+let optionClicked = false;
 let enterCommitted = false;
 let activeCategory = { name: "General", color: "#6b7280" };
-
+let originalNote, newNote;
+let taskToDeleteId = null;
+let modalDeleteButtonClicked = false;
+let tempNewId = false;
 const categoryCache = new Map();
 // name → color (for dropdown reuse)
 export function initNotesUI() {
@@ -28,21 +32,13 @@ export function initNotesUI() {
 
   onNotesChange(renderNotes);
   subscribeNotes();
-
-  document.querySelector(".new-note-btn")?.addEventListener("click", () => {
-    openModal({
-      id: null,
-      title: "",
-      content: "",
-      category: "General",
-    });
-  });
 }
 
 // ───────── RENDER ─────────
 function renderNotes(notes) {
   notesGrid.innerHTML = "";
   categoryCache.clear();
+  console.count("renderNotes fired");
 
   notes.forEach((note) => {
     // Cache categories
@@ -52,23 +48,32 @@ function renderNotes(notes) {
 
     const card = document.createElement("div");
     card.className = "note-card";
-
+    card.dataset.noteId = note.id;
     card.innerHTML = `
      <span 
   class="tag"
   style="background:${note.category?.color || "#6b7280"}20;
          color:${note.category?.color || "#6b7280"};
          border:1px solid ${note.category?.color || "#6b7280"}40">
-  ${note.category?.name || "General"}
+  ${note.category?.name.toUpperCase() || "GENERAL"}
 </span>
       <h3>${note.title}</h3>
-      <p>${note.content.slice(0, 100)}</p>
+      <div>
+      <p>${note.content}</p>
+      </div>
       <div class="note-footer">
         ${formatDate(note.updatedAt)}
-              <span class = "material-symbols-outlined delete-span">delete</span>
+        <button class = "delete-note-btn">
+              <span class = "material-symbols-outlined delete-span">delete</span>Delete
+              </button>
       </div>
 
     `;
+    const deleteBtn = card.querySelector(".delete-note-btn");
+    deleteBtn.addEventListener("click", async (e) => {
+      e.stopPropagation(); // prevent modal from opening
+      openDeleteTaskModal(note.id);
+    });
 
     card.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -84,9 +89,11 @@ function renderNotes(notes) {
 function renderAddCard() {
   const add = document.createElement("div");
   add.className = "note-card add-card";
-  add.innerHTML = `<div class="plus">＋</div><p>Add Note</p>`;
-  add.onclick = () =>
+  add.innerHTML = `<div class="plus"><span class = "material-symbols-outlined">post_add</span><p class="add-note-card-text">Add Note</p></div>`;
+  add.onclick = () => {
+    tempNewId = true;
     openModal({ id: null, title: "", content: "", category: "General" });
+  };
   notesGrid.appendChild(add);
 }
 
@@ -115,7 +122,9 @@ function injectModal() {
     <input type="checkbox" class="autosave-checkbox" checked />
     <span class="slider"></span>
   </label>
+  <button class = "delete-note-btn">
   <span class = "material-symbols-outlined delete-span">delete</span>
+  delete note </button>
   <button class="close-btn">✕</button>
 </div>
     </div>
@@ -188,11 +197,11 @@ function wireModal() {
   const nameInput = modal.querySelector(".category-input");
   const colorInput = modal.querySelector(".category-color");
   const dropdown = modal.querySelector(".category-dropdown");
-  const modalContent = document.querySelector(".note-modal-content");
+
   const autoSaveCheckbox = modal.querySelector(".autosave-checkbox");
   const autoSaveLabel = modal.querySelector(".autosave");
   let autoSaveEnabled = autoSaveCheckbox.checked;
-
+  const modalDeleteBtn = modal.querySelector(".modal-header .delete-note-btn");
   autoSaveCheckbox.addEventListener("change", () => {
     autoSaveEnabled = autoSaveCheckbox.checked;
     autoSaveLabel.textContent = autoSaveEnabled
@@ -200,23 +209,75 @@ function wireModal() {
       : "Auto-save OFF";
   });
 
-  closeBtn.addEventListener("click", closeModal);
-  modal.addEventListener("mousedown", (e) => {
-    if (e.target === modal) closeModal();
+  modalDeleteBtn.addEventListener("click", async () => {
+    modalDeleteButtonClicked = true;
+    console.log("new delete clicked", activeNoteId);
+    openDeleteTaskModal(activeNoteId);
+  });
+
+  modal.addEventListener("mousedown", async (e) => {
+    // Only save + close the modal if clicking outside content
+    if (e.target === e.currentTarget) {
+      if (autoSaveEnabled && modalReadyForSave && !tempNewId) {
+        newNote = {
+          titleInput: titleInput.value,
+          contentInput: contentInput.value,
+          name: activeCategory.name,
+          color: activeCategory.color,
+        };
+        console.log("original category", originalNote, "new note", newNote);
+        if (shallowEqual(originalNote, newNote)) {
+          modalReadyForSave = false;
+          closeModal();
+          return;
+        }
+        await saveNote();
+      }
+
+      await closeModal();
+      modalReadyForSave = false;
+    }
+  });
+  closeBtn.addEventListener("mousedown", async (e) => {
+    // Only save + close the modal if clicking outside content
+    if (e.target === e.currentTarget) {
+      if (autoSaveEnabled && modalReadyForSave) {
+        newNote = {
+          titleInput: titleInput.value,
+          contentInput: contentInput.value,
+          name: activeCategory.name,
+          color: activeCategory.color,
+        };
+        if (shallowEqual(originalNote, newNote)) {
+          modalReadyForSave = false;
+          closeModal();
+          return;
+        }
+        await saveNote();
+      }
+      await closeModal();
+      modalReadyForSave = false;
+    }
+  });
+  // Commit category edits anytime user clicks in modal
+  editor.addEventListener("focusout", (e) => {
+    // If the new focused element is still inside the editor, do nothing
+    if (editor.contains(e.relatedTarget)) return;
+    if (optionClicked) {
+      optionClicked = false;
+      return;
+    }
+    // Otherwise, focus left the editor completely → commit
+    const name = modal.querySelector(".category-input").value;
+    const color = modal.querySelector(".category-color").value;
+    activeCategory = { name, color };
+    commitCategoryEdit(activeCategory);
   });
 
   // 🟣 PILL CLICK → EDIT CATEGORY
   pill.addEventListener("click", () => {
-    console.log(
-      "pill clicked - before editor show",
-      editor.classList.contains("hidden"),
-    );
     pill.classList.add("hidden");
     editor.classList.remove("hidden");
-    console.log(
-      "pill clicked - after editor show",
-      editor.classList.contains("hidden"),
-    );
 
     renderCategoryDropdown(dropdown);
     setTimeout(() => nameInput.focus(), 0);
@@ -244,53 +305,25 @@ function wireModal() {
     }
   });
 
-  // COLOR input live update
-  colorInput.addEventListener("input", () => {
-    console.log("color input");
-    renderCategoryPill({
-      name: nameInput.value || activeCategory.name,
-      color: colorInput.value,
-    });
-  });
-
   // STOP propagation so outside click does not trigger auto-save immediately
   editor.addEventListener("mousedown", (e) => e.stopPropagation());
   dropdown.addEventListener("mousedown", (e) => e.stopPropagation());
 
   saveBtn.addEventListener("click", async () => {
+    newNote = {
+      titleInput: titleInput.value,
+      contentInput: contentInput.value,
+      name: activeCategory.name,
+      color: activeCategory.color,
+    };
+    if (shallowEqual(originalNote, newNote)) {
+      modalReadyForSave = false;
+      closeModal();
+      return;
+    }
     await saveNote();
     closeModal();
-  });
-
-  // 🔴 AUTO-SAVE ON OUTSIDE CLICK
-  document.addEventListener("click", async (e) => {
-    console.log("inside of document listener");
-    // Exit if modal is hidden or auto-save is off
-    if (modal.classList.contains("hidden")) {
-      console.log("if modal is hidden");
-      return;
-    }
-    if (!autoSaveEnabled) {
-      console.log("autoSavenot envales");
-      return;
-    }
-
-    // Exit if click is inside the modal at all
-    if (modalContent.contains(e.target)) {
-      console.log("if click is inside of modal");
-      return;
-    }
-
-    // Only commit category if editor is open AND click is outside modal
-    if (!editor.classList.contains("hidden")) {
-      console.log("insdie document listeners");
-      let name = nameInput.value;
-      let color = colorInput.value;
-      activeCategory = { name, color };
-      commitCategoryEdit(activeCategory);
-    }
-
-    await saveNote();
+    modalReadyForSave = false;
   });
 
   async function saveNote() {
@@ -299,12 +332,13 @@ function wireModal() {
       content: contentInput.value,
       category: activeCategory,
     };
-
+    console.log("activeNoteId", activeNoteId);
     if (activeNoteId) {
       await updateNote(activeNoteId, payload);
     } else {
-      const newId = await createNote(payload);
-      activeNoteId = newId;
+      tempNewId = false;
+      const newNote = await createNote(payload);
+      activeNoteId = newNote.id; // <-- only the string ID
     }
 
     autoSaveLabel.textContent = "Auto-saved just now";
@@ -326,6 +360,13 @@ function openModal(note) {
     typeof note.category === "object"
       ? note.category
       : { name: "General", color: "#6b7280" };
+  originalNote = {
+    titleInput: note.title,
+    contentInput: note.content,
+    name: note.category.name,
+    color: note.category.color,
+  };
+  console.log("originalNote", originalNote);
 
   renderCategoryPill(activeCategory);
 
@@ -345,16 +386,20 @@ function openModal(note) {
   } else {
     createdAtEl.textContent = "Just now";
   }
-
+  modalVisible = true;
   modal.classList.remove("hidden");
+  if (!note.id) {
+    modalReadyForSave = true;
+  }
 }
-function closeModal() {
+async function closeModal() {
   const modalContent = document.querySelector(".note-modal-content");
   const data = modalContent.dataset.expandedFrom;
   document.querySelector(".notes-grid")?.classList.remove("modal-open");
   if (!data) {
     modal.classList.add("hidden");
     activeNoteId = null;
+
     return;
   }
 
@@ -378,6 +423,79 @@ function closeModal() {
     modalContent.dataset.expandedFrom = "";
     activeNoteId = null;
   }, 360);
+}
+
+function renderCategoryPill(category) {
+  console.count("render called");
+  console.log(category.name, category.color);
+  const pill = modal.querySelector(".modal-category-pill");
+
+  const color = category?.color || "#6b7280";
+  const name = (category?.name || "General").toUpperCase();
+
+  pill.textContent = name;
+  pill.style.background = color + "20";
+  pill.style.color = color;
+  pill.style.border = `1px solid ${color}40`;
+}
+function renderCategoryDropdown(container) {
+  container.innerHTML = "";
+  categoryCache.forEach((color, name) => {
+    if (name === activeCategory.name) return;
+
+    const option = document.createElement("div");
+    option.className = "category-option";
+    option.textContent = name;
+    option.tabIndex = 0;
+
+    // Click selects the category and commits
+    option.addEventListener("click", () => {
+      activeCategory = { name, color };
+
+      optionClicked = true;
+      commitCategoryEdit(activeCategory);
+    });
+
+    container.appendChild(option);
+  });
+}
+function commitCategoryEdit(load) {
+  const editor = modal.querySelector(".category-editor");
+  const pill = modal.querySelector(".modal-category-pill");
+
+  if (!editor.classList.contains("hidden")) {
+    activeCategory = load;
+    renderCategoryPill(activeCategory);
+    editor.classList.add("hidden");
+    pill.classList.remove("hidden");
+  }
+}
+function getOriginCard() {
+  const id = document.querySelector(".note-modal-content")?.dataset
+    .originCardId;
+
+  if (!id) return null;
+
+  return [...document.querySelectorAll(".note-card")].find(
+    (card) => card.dataset.noteId === id,
+  );
+}
+function morphCardToTrash(card) {
+  if (!card) return;
+
+  card.classList.add("deleting");
+
+  card.innerHTML = `
+    <div class="trash-morph">
+      <span class="material-symbols-outlined">delete</span>
+    </div>
+  `;
+}
+function shallowEqual(a, b) {
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+
+  return keys.every((k) => a[k] === b[k]);
 }
 function animateExpand(card, note) {
   const rect = card.getBoundingClientRect();
@@ -429,58 +547,99 @@ function animateExpand(card, note) {
     deltaY,
     startScale,
   });
+  modalContent.dataset.originCardId = note.id;
+  setTimeout(() => {
+    modalReadyForSave = true;
+  }, 420);
 }
-function renderCategoryPill(category) {
-  console.count("render called");
-  console.log(category.name, category.color);
-  const pill = modal.querySelector(".modal-category-pill");
-
-  const color = category?.color || "#6b7280";
-  const name = category?.name || "General";
-
-  pill.textContent = name;
-  pill.style.background = color + "20";
-  pill.style.color = color;
-  pill.style.border = `1px solid ${color}40`;
+function openDeleteTaskModal(taskId) {
+  console.log("taskId", taskId);
+  taskToDeleteId = taskId;
+  document.getElementById("deleteTaskModal").classList.remove("hidden");
 }
-function renderCategoryDropdown(container) {
-  container.innerHTML = "";
-  categoryCache.forEach((color, name) => {
-    if (name === activeCategory.name) return;
 
-    const option = document.createElement("div");
-    option.className = "category-option";
-    option.textContent = name;
-    option.tabIndex = 0;
+function closeDeleteTaskModal() {
+  document.getElementById("deleteTaskModal").classList.add("hidden");
+}
+document
+  .getElementById("confirmDeleteTaskBtn")
+  ?.addEventListener("click", async () => {
+    if (tempNewId) {
+      closeDeleteTaskModal();
+      modal.classList.add("hidden");
+      return;
+    }
+    if (!taskToDeleteId) return;
 
-    // Click selects the category and commits
-    option.addEventListener("click", () => {
-      activeCategory = { name, color };
-      console.log("option input");
+    try {
+      if (modalDeleteButtonClicked) {
+        closeDeleteTaskModal();
+        modal.classList.add("no-blur");
+        const modalContent = document.querySelector(".note-modal-content");
 
-      commitCategoryEdit(activeCategory);
-    });
+        // Remove blur instantly
+        document.querySelector(".notes-grid")?.classList.remove("modal-open");
 
-    container.appendChild(option);
+        // Find origin card
+        const originCard = getOriginCard();
+
+        // Morph card into trash icon
+        morphCardToTrash(originCard);
+
+        // Read expansion data
+        const data = modalContent.dataset.expandedFrom;
+        if (!data) {
+          await deleteNote(taskToDeleteId);
+          modal.classList.add("hidden");
+          return;
+        }
+
+        const { deltaX, deltaY } = JSON.parse(data);
+
+        modalContent.style.transition =
+          "transform 420ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms ease";
+
+        // Shrink INTO the trash icon
+        modalContent.style.transform = `
+    translate(-50%, -50%)
+    translate(${deltaX}px, ${deltaY}px)
+    scale(0.15)
+  `;
+
+        modalContent.style.opacity = "0";
+
+        setTimeout(async () => {
+          modal.classList.add("hidden");
+          modalContent.style.transform = "";
+          modalContent.style.opacity = "";
+          modalContent.style.transition = "";
+          modalContent.dataset.expandedFrom = "";
+          modalContent.dataset.originCardId = "";
+
+          await deleteNote(taskToDeleteId);
+          activeNoteId = null;
+          taskToDeleteId = null;
+        }, 420);
+        return;
+      }
+      await deleteNote(taskToDeleteId); // Firestore delete
+      taskToDeleteId = null;
+      // Firestore snapshot will remove the card
+      closeDeleteTaskModal();
+    } catch (err) {
+      console.error("Failed to delete task", err);
+    } finally {
+    }
   });
-}
-function commitCategoryEdit(load) {
-  const editor = modal.querySelector(".category-editor");
-  const pill = modal.querySelector(".modal-category-pill");
-  const nameInput = modal.querySelector(".category-input");
-  const colorInput = modal.querySelector(".category-color");
 
-  // Only commit if editor is visible
-  if (!editor.classList.contains("hidden")) {
-    activeCategory = load;
-    console.log("commitCategory");
-    console.log(activeCategory, "active category");
-    renderCategoryPill(activeCategory);
-
-    editor.classList.add("hidden");
-    pill.classList.remove("hidden");
-
-    console.count("commit called");
-    console.log("Committed category:", activeCategory);
-  }
-}
+document
+  .getElementById("cancelDeleteTaskBtn")
+  ?.addEventListener("click", () => {
+    taskToDeleteId = null;
+    closeDeleteTaskModal();
+  });
+// document.getElementById("deleteTaskModal")?.addEventListener("click", (e) => {
+//   if (e.target.id === "deleteTaskModal") {
+//     closeDeleteTaskModal();
+//   }
+// });
