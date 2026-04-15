@@ -39,7 +39,9 @@ function renderNotes(notes) {
   notesGrid.innerHTML = "";
   categoryCache.clear();
   console.count("renderNotes fired");
+  const spinner = document.getElementById("taskLoading");
 
+  spinner.style.display = "flex";
   notes.forEach((note) => {
     // Cache categories
     if (note.category?.name) {
@@ -84,6 +86,7 @@ function renderNotes(notes) {
   });
 
   renderAddCard();
+  spinner.style.display = "none";
 }
 
 function renderAddCard() {
@@ -92,7 +95,12 @@ function renderAddCard() {
   add.innerHTML = `<div class="plus"><span class = "material-symbols-outlined">post_add</span><p class="add-note-card-text">Add Note</p></div>`;
   add.onclick = () => {
     tempNewId = true;
-    openModal({ id: null, title: "", content: "", category: "General" });
+    animateExpand(add, {
+      id: null,
+      title: "",
+      content: "",
+      category: "General",
+    });
   };
   notesGrid.appendChild(add);
 }
@@ -116,7 +124,6 @@ function injectModal() {
       </div>
 
     <div class="modal-header-actions">
-  <span class="autosave">Auto-saved just now</span>
   <label class="autosave-toggle">
     Auto-save
     <input type="checkbox" class="autosave-checkbox" checked />
@@ -216,9 +223,12 @@ function wireModal() {
   });
 
   modal.addEventListener("mousedown", async (e) => {
+    console.log("in click out save");
     // Only save + close the modal if clicking outside content
     if (e.target === e.currentTarget) {
-      if (autoSaveEnabled && modalReadyForSave && !tempNewId) {
+      console.log("passed first condition");
+      if (autoSaveEnabled && modalReadyForSave) {
+        console.log("inside no new temp id");
         newNote = {
           titleInput: titleInput.value,
           contentInput: contentInput.value,
@@ -227,6 +237,7 @@ function wireModal() {
         };
         console.log("original category", originalNote, "new note", newNote);
         if (shallowEqual(originalNote, newNote)) {
+          console.log("inside no changes");
           modalReadyForSave = false;
           closeModal();
           return;
@@ -327,6 +338,7 @@ function wireModal() {
   });
 
   async function saveNote() {
+    console.log("in save notes");
     const payload = {
       title: titleInput.value,
       content: contentInput.value,
@@ -334,18 +346,20 @@ function wireModal() {
     };
     console.log("activeNoteId", activeNoteId);
     if (activeNoteId) {
+      console.log("existing note");
       await updateNote(activeNoteId, payload);
     } else {
+      console.log("new note");
       tempNewId = false;
       const newNote = await createNote(payload);
       activeNoteId = newNote.id; // <-- only the string ID
     }
 
-    autoSaveLabel.textContent = "Auto-saved just now";
     console.log("Note saved", payload);
   }
 }
 function openModal(note) {
+  modal.classList.remove("no-blur");
   const lastEdited = modal.querySelector(".last-edited");
   const createdAtEl = modal.querySelector(".created-at");
 
@@ -357,14 +371,12 @@ function openModal(note) {
   contentInput.value = note.content || "";
 
   activeCategory =
-    typeof note.category === "object"
-      ? note.category
-      : { name: "General", color: "#6b7280" };
+    typeof note.category === "object" ? note.category : { name: "", color: "" };
   originalNote = {
-    titleInput: note.title,
-    contentInput: note.content,
-    name: note.category.name,
-    color: note.category.color,
+    titleInput: note?.title || "",
+    contentInput: note?.content || "",
+    name: note?.category?.name || "",
+    color: note?.category?.color || "",
   };
   console.log("originalNote", originalNote);
 
@@ -591,6 +603,7 @@ document
         if (!data) {
           await deleteNote(taskToDeleteId);
           modal.classList.add("hidden");
+
           return;
         }
 
@@ -609,17 +622,18 @@ document
         modalContent.style.opacity = "0";
 
         setTimeout(async () => {
-          modal.classList.add("hidden");
-          modalContent.style.transform = "";
+          console.log("in tiemout");
+          modalContent.style.transform = " ";
           modalContent.style.opacity = "";
           modalContent.style.transition = "";
           modalContent.dataset.expandedFrom = "";
           modalContent.dataset.originCardId = "";
-
+          modal.classList.add("hidden");
           await deleteNote(taskToDeleteId);
           activeNoteId = null;
           taskToDeleteId = null;
         }, 420);
+
         return;
       }
       await deleteNote(taskToDeleteId); // Firestore delete

@@ -21,7 +21,7 @@
     />
   </head>
 
-  <body>
+  <body data-page="notes">
     <!-- Injected app shell -->
     <div id="app-shell"></div>
 
@@ -70,6 +70,7 @@
       <!-- Main Content -->
       <section class="notes-main">
         <!-- Top bar -->
+
         <div class="notes-topbar">
           <input class="notes-search" placeholder="Search your notes..." />
           <div class="topbar-actions">
@@ -84,6 +85,15 @@
           <p class="notes-subtitle">
             Manage and organize your corporate meeting logs and strategy notes.
           </p>
+        </div>
+
+        <div id="taskLoading" class="loading-spinner hide">
+          <div class="pulse-loader">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+          <div class="loading-tasks">Loading notes...</div>
         </div>
 
         <!-- Notes Grid -->

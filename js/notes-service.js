@@ -20,6 +20,10 @@ import { clearTasksUI } from "./tasks.js"; // optional: clear grid before render
 // ───────── STATE ─────────
 let unsubscribeNotes = null;
 const subscribers = new Set(); // callbacks to notify UI
+let currentSort = {
+  field: "createdAt",
+  direction: "desc",
+};
 
 // ───────── INTERNAL ─────────
 function getNotesCollectionRef(uid) {
@@ -37,6 +41,7 @@ function getNotesCollectionRef(uid) {
 
 // ───────── SUBSCRIBE ─────────
 export function subscribeNotes() {
+  console.count("notes listener attached");
   const uid = getUID();
   if (!uid) return;
 
@@ -52,6 +57,10 @@ export function subscribeNotes() {
   const q = query(ref, orderBy("updatedAt", "desc"));
 
   unsubscribeNotes = onSnapshot(q, (snap) => {
+    if (snap.metadata.hasPendingWrites) return; // ignore local write snapshot
+
+    console.log("SNAPSHOT", Date.now(), location.href);
+    console.trace();
     const notes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     // notify all subscribers
     subscribers.forEach((cb) => cb(notes));
@@ -113,5 +122,8 @@ export async function deleteNote(id) {
 
 // ───────── LISTENER HOOKS ─────────
 // automatically re-subscribe on project or kanban mode change
-onKanbanModeChange(() => subscribeNotes());
-onProjectChange(() => subscribeNotes());
+let InNotesPage = document.querySelector(".notes-grid");
+if (InNotesPage) {
+  onKanbanModeChange(() => subscribeNotes());
+  onProjectChange(() => subscribeNotes());
+}

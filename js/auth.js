@@ -36,7 +36,7 @@ export function initAuth(onReady) {
 
     // user exists
     currentUser = user;
-
+    console.log("current user", currentUser);
     // Update UI for auth state
     updateAuthUI(user);
 

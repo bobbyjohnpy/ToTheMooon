@@ -37,7 +37,11 @@ let lastLoadedUID = null;
     const firstProjectId = await ensureFirstProject(user.uid);
     await populateProjectDropdown(user.uid);
     initProjectUI();
-    initNotesUI();
+    let InNotesPage = document.querySelector(".notes-grid");
+    if (InNotesPage) {
+      console.log("in notes page");
+      initNotesUI();
+    }
 
     // Start initial subscription
 

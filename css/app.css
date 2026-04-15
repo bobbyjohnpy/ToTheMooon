@@ -9,6 +9,8 @@
   --border: #dbe4ef;
   --radius: 14px;
   --shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  --note-card: white;
+  --note-content: #64748b;
 } /* Dark mode variables */
 html.dark {
   --header-bg: #334155;
@@ -20,6 +22,8 @@ html.dark {
   --border: #3f4c5a; /* subtle dark border */
   --shadow: 0 6px 18px rgba(0, 0, 0, 0.6); /* stronger shadow for dark */
   --primary: #0ea5e9; /* lighter blue for dark mode */
+  --note-card: #2c3e50;
+  --note-content: #e0e7ff;
 } /* Reset */
 * {
   box-sizing: border-box;

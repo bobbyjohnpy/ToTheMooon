@@ -1,6 +1,9 @@
 // js/firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  initializeFirestore,
+  CACHE_SIZE_UNLIMITED,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -14,5 +17,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
+// ✅ Initialize Firestore with persistent cache and multi-tab support
+export const db = initializeFirestore(app, {
+  cache: {
+    type: "persistent", // use IndexedDB for persistence
+    sizeBytes: CACHE_SIZE_UNLIMITED, // optional, unlimited cache
+  },
+  synchronizeTabs: true, // enables multi-tab sync
+});
+
 export const auth = getAuth(app);

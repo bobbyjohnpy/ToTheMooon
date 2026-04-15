@@ -71,8 +71,42 @@
         background: var(--column-bg);
         border-radius: var(--radius);
         padding: 16px;
+        height: fit-content;
+        min-height: 248px;
+        max-height: 100vh; /* never go below 200px */
+        overflow: auto;
+        scrollbar-width: thin; /* make scrollbar thin */
+        display: flex;
+        flex-direction: column;
       }
 
+      /* Chrome, Edge, Safari */
+      .column::-webkit-scrollbar {
+        width: 8px; /* thickness of scrollbar */
+      }
+
+      .column::-webkit-scrollbar-track {
+        background: #f0f0f0; /* track color */
+        border-radius: 4px;
+      }
+
+      .column::-webkit-scrollbar-thumb {
+        background-color: #888; /* thumb color */
+        border-radius: 4px; /* round edges */
+        border: 2px solid #f0f0f0; /* space around thumb */
+      }
+
+      .column {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+      .column:hover {
+        scrollbar-color: #3b82f682 transparent;
+      }
+
+      .column-element:hover::-webkit-scrollbar-thumb {
+        scrollbar-color: #2563eb;
+      }
       .column-header {
         display: flex;
         justify-content: space-between;
@@ -199,7 +233,9 @@
 
       /* show on hover OR keyboard focus */
       .subtask-row:hover .subtask-delete-btn,
-      .subtask-row:focus-within .subtask-delete-btn {
+      .subtask-row:focus-within .subtask-delete-btn,
+      .subtask-row:hover .subtask-notes-btn,
+      .subtask-row:focus-within .subtask-notes-btn {
         opacity: 1;
         pointer-events: auto;
         transform: scale(1);
@@ -211,6 +247,9 @@
       }
       .delete-div {
         width: fit-content;
+      }
+      .subtasks-row-actions {
+        display: flex;
       }
 
       @keyframes completePulse {
@@ -294,11 +333,11 @@
       /* Priority badge */
       .priority-div {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-around;
         padding-top: 16px;
         margin-top: 12px;
         border-top: 1px solid rgba(226, 232, 240, 1);
-        gap: 1rem;
+
         align-items: end;
       }
       .show {
@@ -469,7 +508,7 @@
         background: rgba(30, 111, 217, 0.1); /* subtle highlight */
       }
       .column-body {
-        min-height: 100%;
+        flex: 1;
       }
       .mobile-nav {
         display: none;
@@ -604,7 +643,7 @@
       }
 
       .subtask-add-btn span:hover {
-        color: #10470b;
+        color: #18af0a;
       }
       .subtask-cancel-btn span:hover {
         color: #f87171; /* red-400 */
@@ -748,7 +787,7 @@
         font-weight: 600;
         color: #64748b;
         margin-top: 16px;
-        margin-bottom: 6px;
+        margin-bottom: 30px;
       }
 
       .modal-input {
@@ -813,7 +852,7 @@
       }
 
       .add-subtask-btn {
-        margin-top: 10px;
+        margin-top: 20px;
         border: 1px dashed #cbd5e1;
         border-radius: 8px;
         padding: 8px;
@@ -847,7 +886,26 @@
         border-radius: 8px;
         cursor: pointer;
       }
-
+      .modal-card .subtask-add-btn,
+      .modal-card .subtask-cancel-btn {
+        background: #fff;
+      }
+      .modal-subtask {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-subtask-btn-delete {
+        background: #fff;
+        border: none;
+      }
+      .modal-subtask-btn-delete span {
+        font-size: 17px;
+      }
+      .subtask-underline {
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 6px;
+      }
       @keyframes shake {
         0% {
           transform: translateX(0);
@@ -869,6 +927,242 @@
       .card.shake {
         animation: shake 0.35s ease;
       }
+      .modal-subtask-btn-delete span {
+        transition: color 0.25s ease;
+      }
+      .modal-subtask-btn-delete span:hover {
+        color: #f87171;
+      }
+      .card {
+        transition: color 0.25s ease;
+        transition: transform 0.25s ease;
+      }
+      .card:hover {
+        cursor: pointer;
+        transform: scale(1.02);
+      }
+
+      /* Target child element */
+      .card:hover h4 {
+        color: var(--primary);
+      }
+      .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .pulse-loader {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .pulse-loader div {
+        width: 12px;
+        height: 12px;
+        background-color: #3b82f6; /* Blue */
+        border-radius: 50%;
+        animation: pulse 1.2s infinite ease-in-out;
+      }
+
+      .pulse-loader div:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .pulse-loader div:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .pulse-loader div:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      .sort-wrapper {
+        position: relative;
+      }
+
+      .sort-dropdown {
+        position: absolute;
+        right: 0;
+        top: 40px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        min-width: 180px;
+        z-index: 1;
+      }
+
+      .sort-option {
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .sort-option:hover {
+        background: #f3f4f6;
+      }
+      .sort-btn {
+        height: 100%;
+        border: none;
+        display: flex;
+        align-items: center;
+        border-radius: 12px;
+        width: 110px;
+        justify-content: space-evenly;
+        box-shadow: 0 6px 16px rgb(157 174 195 / 35%);
+        background: #ffffff;
+      }
+      .row-actions {
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        transition: 0.15s;
+      }
+
+      .subtask-row:hover .row-actions {
+        opacity: 1;
+      }
+      .subtask-notes-btn {
+        opacity: 0;
+        pointer-events: none;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        transition:
+          opacity 0.15s ease,
+          transform 0.15s ease,
+          color 0.15s ease;
+        transform: scale(0.9);
+        color: #94a3b8;
+        width: fit-content;
+      }
+      .subtask-notes-btn:hover,
+      .task-notes-btn:hover {
+        color: #3b82f6;
+        cursor: pointer;
+      }
+      .task-notes-btn {
+        background-color: var(--card-bg);
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        font-size: 10px;
+        font-weight: 700;
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+      }
+      .subtask-note-text,
+      .subtask-delete-text {
+        display: none;
+      }
+      .checkbox-div {
+        display: flex;
+        flex-direction: row;
+      }
+      .subtask-row.completed .subtask-text span {
+        text-decoration: line-through;
+        opacity: 0.45;
+      }
+
+      .subtask-row.completed {
+        opacity: 0.85;
+      }
+      .container {
+        display: block;
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        font-size: 22px;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      /* Hide the browser's default checkbox */
+      .container input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+      }
+
+      /* Create a custom checkbox */
+      .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 17px;
+        width: 17px;
+        background-color: #eee;
+      }
+
+      /* On mouse-over, add a grey background color */
+      .container:hover input ~ .checkmark {
+        background-color: #ccc;
+      }
+
+      /* When the checkbox is checked, add a blue background */
+      .container input:checked ~ .checkmark {
+        background-color: #2196f3;
+      }
+
+      /* Create the checkmark/indicator (hidden when not checked) */
+      .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+      }
+
+      /* Show the checkmark when checked */
+      .container input:checked ~ .checkmark:after {
+        display: block;
+      }
+
+      /* Style the checkmark/indicator */
+      .container .checkmark:after {
+        left: 5px;
+
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 3px 3px 0;
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        transform: rotate(45deg);
+      }
+
+      .task-notes-btn .material-symbols-outlined {
+        font-size: 17px;
+      }
+      @keyframes pulse {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+          opacity: 0.3;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .loading-text {
+        margin-top: 0.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #374151;
+      }
 
       /* Animation */
       @keyframes modalPop {
@@ -881,7 +1175,35 @@
           transform: translateY(-50%) scale(1);
         }
       }
-
+      @media (max-width: 1300px) {
+        .subtask-note-text,
+        .subtask-delete-text {
+          display: inline;
+        }
+        .subtask-row {
+          flex-direction: column;
+          align-items: start;
+        }
+        .checkbox-div {
+          display: flex;
+          justify-content: space-between;
+        }
+        .subtask-delete-btn,
+        .subtask-notes-btn {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+        }
+        .subtasks-row-actions {
+          width: 100%;
+          display: flex;
+          align-items: end;
+          justify-content: end;
+        }
+        .subtasks-row-actions .material-symbols-outlined {
+          font-size: 17px;
+        }
+      }
       @media (max-width: 768px) {
         .kanban {
           display: flex;
@@ -917,10 +1239,200 @@
           }
         }
       }
+      .notes-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .notes-window {
+        width: 1200px;
+        height: 700px;
+        background: #0f172a;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+
+        border-bottom: 1px solid var(--border);
+        background: var(--header-bg);
+      }
+
+      .notes-topbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .notes-breadcrumb {
+        color: #9ca3af;
+        font-size: 14px;
+      }
+
+      .notes-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .notes-body {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+      }
+
+      .notes-editor-side {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        background: var(--card-bg);
+      }
+
+      .notes-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .notes-tab {
+        background: #1e293b;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+      }
+
+      .notes-tab.active {
+        background: #2563eb;
+      }
+
+      .note-title {
+        font-size: 28px;
+        font-weight: 700;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+
+      .note-editor {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--text-main);
+        font-size: 15px;
+        resize: none;
+      }
+
+      .notes-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 12px;
+      }
+
+      .discard-btn {
+        background: transparent;
+        color: #9ca3af;
+        border: none;
+      }
+
+      .save-btn {
+        background: #3b82f6;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        color: white;
+      }
+
+      .notes-sidebar {
+        width: 300px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px;
+        background: var(--header-bg);
+      }
+
+      .meta-section {
+        margin-top: 20px;
+      }
+
+      .meta-section h4 {
+        font-size: 12px;
+        color: var(--text-main);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+      .active-tab {
+        box-shadow: 0 1px 16px rgba(65, 89, 129, 0.35);
+
+        background: rgb(65 89 129);
+      }
+      .category-pill {
+        font-size: 11px;
+        font-weight: 800;
+        width: fit-content;
+        padding: 4px 8px;
+        border-radius: 8px;
+        margin-right: 10px;
+        height: fit-content;
+        margin-top: 4px;
+        background: #d3d5d9;
+        border: 1px solid;
+      }
+
+      .category-picker {
+        position: fixed;
+        z-index: 1000;
+        background: #e3e1e1;
+        border-radius: 12px;
+        padding: 10px;
+        width: 220px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+      .pill-container {
+        display: flex;
+        justify-content: start;
+        margin-bottom: 10px;
+      }
+
+      .category-picker.hidden {
+        display: none;
+      }
+
+      .category-option {
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .category-option:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .color-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
     </style>
   </head>
 
-  <body>
+  <body data-page="tasks">
     <div id="taskModal" class="modal hidden">
       <div class="modal-card">
         <h2 class="modal-title">Create New Task</h2>
@@ -943,7 +1455,8 @@
           <button data-priority="high" class="priority-btn high">High</button>
         </div>
 
-        <label class="modal-label">Subtasks</label>
+        <label class="modal-label subtask-underline">Subtasks</label>
+
         <div id="subtaskList" class="subtask-list"></div>
 
         <button id="addSubtaskBtn" class="add-subtask-btn">
@@ -965,11 +1478,27 @@
           <p>Productivity App Redesign / Q4 Sprint</p>
         </div>
         <div class="actions">
+          <div class="sort-wrapper">
+            <button id="sortBtn" class="sort-btn">
+              <span>Sort By</span>
+              <span class="material-symbols-outlined">sort</span>
+            </button>
+
+            <div id="sortDropdown" class="sort-dropdown hidden"></div>
+          </div>
           <button class="btn primary" id="newTaskBtn">
             <span class="material-symbols-outlined">add</span>
             New Task
           </button>
         </div>
+      </div>
+      <div id="taskLoading" class="loading-spinner hide">
+        <div class="pulse-loader">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <div class="loading-tasks">Loading tasks...</div>
       </div>
 
       <section class="kanban">
@@ -1048,6 +1577,82 @@
           </button>
         </div>
       </div>
+    </div>
+    <div id="notesModal" class="notes-modal hidden">
+      <div class="notes-window">
+        <!-- Header -->
+        <div class="notes-topbar">
+          <div class="notes-breadcrumb">
+            Projects / <span id="modalProjectName"></span> / Editing Note
+          </div>
+
+          <div class="notes-actions">
+            <span class="autosave">Auto-saved</span>
+
+            <button id="closeNotesModal">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="notes-body">
+          <!-- MAIN EDITOR SIDE -->
+          <div class="notes-editor-side">
+            <div class="notes-tabs" id="notesTabs"></div>
+
+            <input id="noteTitle" class="note-title" placeholder="Note title" />
+
+            <textarea
+              id="noteContent"
+              class="note-editor"
+              placeholder="Write your note..."
+            ></textarea>
+
+            <div class="notes-footer">
+              <button class="discard-btn">Discard</button>
+
+              <button id="saveNotesBtn" class="save-btn">Save Changes</button>
+            </div>
+          </div>
+
+          <!-- RIGHT METADATA PANEL -->
+          <div class="notes-sidebar">
+            <div class="linked-project">
+              <h4>Linked Project</h4>
+              <div id="linkedProjectCard"></div>
+            </div>
+
+            <div class="meta-section">
+              <h4>Metadata</h4>
+
+              <p>
+                Created by
+                <span id="noteCreator"></span>
+              </p>
+
+              <p>
+                Created Date
+                <span id="noteCreated"></span>
+              </p>
+
+              <p>
+                Last Edited
+                <span id="noteEdited"></span>
+              </p>
+            </div>
+
+            <div class="meta-section">
+              <h4>Note Stats</h4>
+
+              <p id="noteCharCount"></p>
+              <p id="noteWordCount"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="categoryPicker" class="category-picker hidden">
+      <!-- dynamically filled -->
     </div>
 
     <script type="module" src="./js/app-init.js"></script>
